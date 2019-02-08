@@ -33,7 +33,7 @@ namespace WorkmanCiera_Exercise1
                     case "1":
                         {
                             //Sort list A-Z
-                            if (listOfBrands == null)
+                            if (listOfBrands.Count == 0)
                             {
                                 Console.WriteLine("You must repopulate the List first!");
                             }
@@ -46,12 +46,26 @@ namespace WorkmanCiera_Exercise1
                     case "2":
                         {
                             //Sort list Z-A
+                            if (listOfBrands.Count == 0)
+                            {
+                                Console.WriteLine("You must repopulate the List first!");
+                            }
+                            else
+                            {
+                                SortZA(listOfBrands);
+                            }
                             break;
                         }
                     case "3":
                         {
                             //View list without sorting
-                            ViewList(listOfBrands);
+                            if (listOfBrands.Count == 0)
+                            {
+                                Console.WriteLine("Please repopulate the list to view it!");
+                            }
+                            else {
+                                ViewList(listOfBrands);
+                            }
                             break;
                         }
                     case "4":
@@ -98,9 +112,9 @@ namespace WorkmanCiera_Exercise1
             Console.WriteLine("1. Sort List A-Z\r\n" +
                 "2. Sort List Z-A\r\n" +
                 "3. View List\r\n" +
-                "3. Remove Items From List\r\n" +
-                "4. Repopulate List\r\n" +
-                "5. Exit\r\n");
+                "4. Remove Items From List\r\n" +
+                "5. Repopulate List\r\n" +
+                "6. Exit\r\n");
         }
 
         //The method to populate the list of brands the user interacts with.
@@ -161,29 +175,35 @@ namespace WorkmanCiera_Exercise1
             }
             
         }
+        //The method to sort the list Z-A
         public static void SortZA(List<string> _listOfBrands)
         {
-
+            _listOfBrands.Sort();
+            _listOfBrands.Reverse();
+            for (int i = 0; i < _listOfBrands.Count; i++)
+            {
+                Console.WriteLine(_listOfBrands[i].ToString());
+            }
+            
         }
 
         //Method to remove a random index in the list until the list is depleted.
         public static List<string> RemoveRandomBrands(List<string> _listOfBrands)
         {
             Random rndm = new Random();
-            if (_listOfBrands != null && _listOfBrands.Count > 0)   
+            
+            if (_listOfBrands.Count > 0)   
             {
+                
                 for (int i = 0; i < _listOfBrands.Count; i++)
                 {
                     int randomIndex = rndm.Next(0, _listOfBrands.Count - 1);
                     Console.WriteLine($"The brand {_listOfBrands[randomIndex]} removed.");
                     _listOfBrands.RemoveAt(randomIndex);
 
-                    
-
                     i++;
-                }
-                
-                
+                    ViewList(_listOfBrands);
+                }   
             }
             else
             {
