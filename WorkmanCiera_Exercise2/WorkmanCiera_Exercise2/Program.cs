@@ -17,9 +17,9 @@ namespace WorkmanCiera_Exercise2
 
             //Monthly Topic - Feb - Clothing Brands
             //Clue game
+            //answer = "Prada";
+
             Console.Clear();
-            string answer = "Prada";
-            char[] answerArray = answer.ToCharArray();
             List<string> listOfClues = new List<string>();
             listOfClues = PopulateList();
 
