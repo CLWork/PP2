@@ -20,3 +20,9 @@
 - The if statement to check to see if the last clue has been output to the console and if the boolean has been changed to true ends the program properly if no correct answer has been given.
 - A Pause Before Continuing function has been input to make sure the window stays open.
 - Project complete.
+
+####CE03
+- 2/14/19 - Validation class added. Utility class added. Display menu method added. Student class added. Course class added. Course and Student method created to populate lists. Switch statement created. Quit program functionality added.
+- Student class has the update overall grade, choose a class to update grade, and update class grade functionality added to it. The method to determine the letter grade has been added.
+
+
