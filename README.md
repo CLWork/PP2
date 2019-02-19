@@ -25,4 +25,8 @@
 - 2/14/19 - Validation class added. Utility class added. Display menu method added. Student class added. Course class added. Course and Student method created to populate lists. Switch statement created. Quit program functionality added.
 - Student class has the update overall grade, choose a class to update grade, and update class grade functionality added to it. The method to determine the letter grade has been added.
 
+####CE04
+- 2/15/19 - Switch statement created. 
+- 2/17/19 - Color dictionary is filled. Every option displays the 3 facts associated with the color.
+
 
