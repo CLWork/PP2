@@ -17,8 +17,27 @@ namespace WorkmanCiera_RaevensWritingDesk
              * Project & Portfolio 2
              * Raeven's Writing Desk Code Files
              */
+            Program instance = new Program();
+            instance.connection = new MySqlConnection();
+            instance.Connect();
 
-
+            Console.WriteLine("Login or Create New Account?");
+            string input = Console.ReadLine().ToLower();
+            switch(input)
+            {
+                case "login":
+                    {
+                        break;
+                    }
+                case "create new account":
+                    {
+                        instance.CreateUser();
+                        break;
+                    }
+                default:
+                    Console.WriteLine($"Your entry of {input} was invalid. Please try again.");
+                    break;
+            }
 
         }
         DataTable QueryToDB(string query)
@@ -41,7 +60,7 @@ namespace WorkmanCiera_RaevensWritingDesk
             string conString = $"Server={ip};";
             conString += "uid=dbremoteuser;";
             conString += "password=password;";
-            conString += "database=CieraWorkman_MDV229_Database_201902;";
+            conString += "database=CieraWorkman_RaevensWritingDesk_MDV229_Database_201902;";
             conString += "port=8889;";
 
             connection.ConnectionString = conString;
@@ -84,6 +103,31 @@ namespace WorkmanCiera_RaevensWritingDesk
                 }
                 Console.WriteLine(msg);
 
+            }
+        }
+        void CreateUser()
+        {
+            string query = "INSERT INTO users(username, users_password, user_email) VALUES username = @username, users_password = @password, user_email = @email,";
+            Console.Write("What username would you like to use? ");
+            string username = Console.ReadLine();
+
+            Console.Write("\r\nWhat email are you using? ");
+            string email = Console.ReadLine();
+
+            Console.Write("\r\nEnter your desired password: ");
+            string password = Console.ReadLine();
+
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@email", email);
+            cmd.Parameters.AddWithValue("@password", password);
+
+            MySqlDataReader rdr;
+
+            rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                Console.WriteLine("Updating..");
             }
         }
     }
