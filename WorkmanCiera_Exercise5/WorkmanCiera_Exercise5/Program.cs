@@ -21,43 +21,70 @@ namespace WorkmanCiera_Exercise5
             instance.DisplayInstructions();
 
             bool programIsRunning = true;
-            bool replay = false;
+            
+            //Allows game to loop until player decides to no longer play.
             while (programIsRunning)
             {
+                //Variables to keep track of scores.
+                int playerWins = 0;
+                int computerWins = 0;
+                int ties = 0;
+                //Game loops for 10 rounds.
                 for (int i = 1; i < 11; i++)
                 {
                     Console.WriteLine($"Round {i}.");
                     string playerIcon = instance.ChooseYourIcon(gameChoices);
                     int computerChoice = instance.ComputerChoice(gameChoices);
                     string computerIcon = gameChoices[computerChoice];
-                    instance.ChooseWinner(playerIcon, computerIcon, replay);
+                    string whoWins = instance.ChooseWinner(playerIcon, computerIcon);
+                    if (whoWins == "player")
+                    {
+                        playerWins = playerWins + 1;
+                    } else if (whoWins == "computer")
+                    {
+                        computerWins = computerWins + 1;
+                        
+                    } else if (whoWins == "tie")
+                    {
+                        ties = ties + 1;
+                    }
+                    else
+                    {
+                        //Handles unexpected output.
+                        Console.WriteLine("Not a valid round.");
+                    }
 
-                    
                 }
 
-                //if (i == 10)
-                //{
-                //    Console.WriteLine("Play Again? Y/N");
-                //    string input = Console.ReadLine().ToLower();
-                //    switch (input)
-                //    {
-                //        case "y":
-                //        case "yes":
-                //            {
-                //                replay = true;
-                //                break;
-                //            }
-                //        case "n":
-                //        case "no":
-                //            {
-                //                programIsRunning = false;
-                //                break;
-                //            }
-                //    }
+                //Outputs total wins to the user. Asks if they are to replay or not.
+                Console.WriteLine($"Player Wins: {playerWins} - Ties: {ties} - Computer Wins: {computerWins}");
+                Console.WriteLine("Replay? Y/N");
+                string replayGame = Console.ReadLine().ToLower();
+                switch (replayGame)
+                {
+                    case "y":
+                    case "yes":
+                        {
+                            //Resets the score keepers.
+                            playerWins = 0;
+                            computerWins = 0;
+                            ties = 0;
+                            break;
+                        }
+                    case "n":
+                    case "no":
+                        {
+                            //Quits program
+                            programIsRunning = false;
+                            break;
+                        }
+                }
+                
+
             }
         }
        
-
+        //Displays the instructions at the beginning of the game.
         void DisplayInstructions()
         { 
             Console.WriteLine("How to Play: Choose one of the following - Rock, Paper, Scissors, Lizard, Spock.");
@@ -73,6 +100,7 @@ namespace WorkmanCiera_Exercise5
                 "Game Length: 10 Rounds\r\n");
         }
 
+        //Populates the list of icons the player and computer have to choose from.
         List<string> PopulateList()
         {
             List<string> _gameChoices = new List<string>();
@@ -90,6 +118,7 @@ namespace WorkmanCiera_Exercise5
             return _gameChoices;
         }
 
+        //Allows the user to choose their icon/game piece.
         string ChooseYourIcon(List<string> _gameChoices)
         {
             string _playerIcon = null;
@@ -143,6 +172,7 @@ namespace WorkmanCiera_Exercise5
 
         }
 
+        //Computer chooses their icon/game piece.
         int ComputerChoice(List<string> _gameChoices)
         {
             Random rndm = new Random();
@@ -151,144 +181,170 @@ namespace WorkmanCiera_Exercise5
             
         }
         
-        void ChooseWinner(string _playerIcon, string _computerIcon, bool _replay)
+        //Takes the program through a series of If/If Else statements to determine the winner.
+        string ChooseWinner(string _playerIcon, string _computerIcon)
         {
-            int computerWin = 0;
-            int playerWin = 0;
-            int tie = 0;
+            string winner = null;
 
             if (_playerIcon == "rock" && _computerIcon == "rock")
             {
-                tie += tie + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "tie";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!");
+                return winner;
             }
             else if (_playerIcon == "paper" && _computerIcon == "paper")
             {
-                tie += 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "tie";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!");
+                return winner;
 
             } else if (_playerIcon == "scissors" && _computerIcon == "scissors")
             {
-                tie += tie + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "tie";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!");
+                return winner;
 
             } else if (_playerIcon == "lizard" && _computerIcon == "lizard")
             {
-                tie += tie + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "tie";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!");
+                return winner;
             }
             else if (_playerIcon == "spock" && _computerIcon == "spock")
             {
-                tie += tie + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "tie";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nTie!");
+                return winner;
             }
             else if (_playerIcon == "rock" && _computerIcon == "paper")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             }
             else if (_playerIcon == "paper" && _computerIcon == "rock")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
             }
             else if (_playerIcon == "rock" && _computerIcon == "scissors")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
 
             } else if (_playerIcon == "scissors" && _computerIcon == "rock")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             }
             else if (_playerIcon == "rock" && _computerIcon == "lizard")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
 
             }
             else if (_playerIcon == "lizard" && _computerIcon == "rock")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             }
             else if (_playerIcon == "rock" && _computerIcon == "spock")
             {
-                computerWin = computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             } else if (_playerIcon == "spock" && _computerIcon == "rock")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
             }
             else if (_playerIcon == "paper" && _computerIcon == "scissors")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             } else if (_playerIcon == "scissors" && _computerIcon == "paper")
             {
-                playerWin = playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
             }
             else if (_playerIcon == "paper" && _computerIcon == "lizard")
             {
-                computerWin = computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             } else if (_playerIcon == "lizard" && _computerIcon == "paper")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
             }
             else if (_playerIcon == "paper" && _computerIcon == "spock")
             {
-                playerWin = playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
 
             } else if (_playerIcon == "spock" && _computerIcon == "paper")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
             }
             else if (_playerIcon == "scissors" && _computerIcon == "lizard")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
 
             } else if (_playerIcon == "lizard" && _computerIcon == "scissors")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
             }
             else if (_playerIcon == "scissors" && _computerIcon == "spock")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
 
             } else if(_playerIcon == "spock" && _computerIcon == "scissors")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
             }
             else if (_playerIcon == "lizard" && _computerIcon == "spock")
             {
-                playerWin += playerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "player";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nPlayer wins!");
+                return winner;
 
             } else if(_playerIcon == "spock" && _computerIcon == "lizard")
             {
-                computerWin += computerWin + 1;
-                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!\r\n Player Wins: {playerWin} Ties: {tie} Computer Wins: {computerWin}");
+                winner = "computer";
+                Console.WriteLine($"Player Chose: {_playerIcon} Computer Chose: {_computerIcon}\r\nComputer wins!");
+                return winner;
             }
             else
             {
+                winner = "none";
                 Console.WriteLine("Pairing not compatiable.");
+                return winner;
             }
             
 
