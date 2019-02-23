@@ -21,15 +21,19 @@ namespace WorkmanCiera_RaevensWritingDesk
             instance.connection = new MySqlConnection();
             instance.Connect();
 
+            Console.WriteLine("Welcome to Raeven's Writing Desk!");
             Console.WriteLine("Login or Create New Account?");
             string input = Console.ReadLine().ToLower();
             switch(input)
             {
                 case "login":
                     {
+                        instance.LoginUser();
                         break;
                     }
                 case "create new account":
+                case "create account":
+                case "create":
                     {
                         instance.CreateUser();
                         break;
@@ -107,11 +111,11 @@ namespace WorkmanCiera_RaevensWritingDesk
         }
         void CreateUser()
         {
-            string query = "INSERT INTO users(username, users_password, user_email) VALUES username = @username, users_password = @password, user_email = @email,";
+            string query = "INSERT INTO users(username, users_password, user_email) VALUES (@username, @password, @email)";
             Console.Write("What username would you like to use? ");
             string username = Console.ReadLine();
 
-            Console.Write("\r\nWhat email are you using? ");
+            Console.Write("\r\nWhat is your email? ");
             string email = Console.ReadLine();
 
             Console.Write("\r\nEnter your desired password: ");
@@ -125,10 +129,32 @@ namespace WorkmanCiera_RaevensWritingDesk
             MySqlDataReader rdr;
 
             rdr = cmd.ExecuteReader();
-            while (rdr.Read())
+            Console.WriteLine("New user added successfully!");
+        }
+        void LoginUser()
+        {
+            Console.Write("Enter your username: ");
+            string username = Console.ReadLine();
+
+            Console.Write("\r\nEnter your password: ");
+            string password = Console.ReadLine();
+
+            string query = "SELECT username, users_password FROM users WHERE username = @username AND users_password = @password";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@password", password);
+
+            MySqlDataReader rdr;
+            rdr = cmd.ExecuteReader();
+            if (rdr.HasRows)
             {
-                Console.WriteLine("Updating..");
+                Console.WriteLine($"Welcome {username}!");
             }
+            else
+            {
+                Console.WriteLine("User not found. Please try again.");
+            }
+
         }
     }
 }
