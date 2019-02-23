@@ -32,6 +32,8 @@
 
 ####CE05
 - 2/21/2019 - List of game choices added. How to play instructions added. Player choice implemented. Random computer choice function implemented. Win/Lose/Tie situations written. Game is controlled by loops to span 10 rounds. I need to tweak score keeping so it does not reset, will probably have to remove it from the win/lose/tie function and write it separately. Replay function needs to be implemented.
+- 2/23/2019 - Replay function created and implemented. Score keeper taken out of ChooseWinner function to keep track in the for loop instead.
+- Project is completed.
 
 ####CE06
 - date - text
