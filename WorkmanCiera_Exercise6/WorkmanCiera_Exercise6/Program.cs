@@ -26,11 +26,33 @@ namespace WorkmanCiera_Exercise6
 
             instance.DisplayInstructions();
 
+            List<string> players = instance.NameThePlayers();
             bool programIsRunning = true;
             while (programIsRunning)
             {
-                List<string> players = instance.NameThePlayers();
+                
                 instance.GiveCardsToPlayers(cardDeck, players);
+
+                Console.WriteLine("Replay Game With Same Players? (Y/N)");
+                string input = Console.ReadLine().ToLower();
+                switch (input)
+                {
+                    case "y":
+                    case "yes":
+                        {
+                            cardDeck = instance.PopulateCards();
+                            break;
+                        }
+                    case "n":
+                    case "no":
+                        {
+                            programIsRunning = false;
+                            break;
+                        }
+                    default:
+                        Console.WriteLine($"Your entry of {input} was invalid, please try again.");
+                        break;
+                }
 
 
                 Utility.PauseBeforeContinuing();
@@ -184,59 +206,159 @@ namespace WorkmanCiera_Exercise6
             List<string> playerFourCards = new List<string>();
             Random rmdm = new Random();
 
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 13; i++)
             {
                 int rndmIndex = rmdm.Next(0, _cardDeck.Count);
                 playerOneCards.Add(_cardDeck[rndmIndex]);
                 _cardDeck.Remove(_cardDeck[rndmIndex]);
             }
 
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 13; i++)
             {
                 int rndmIndex = rmdm.Next(0, _cardDeck.Count);
                 playerTwoCards.Add(_cardDeck[rndmIndex]);
                 _cardDeck.Remove(_cardDeck[rndmIndex]);
             }
 
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 13; i++)
             {
                 int rndmIndex = rmdm.Next(0, _cardDeck.Count);
                 playerThreeCards.Add(_cardDeck[rndmIndex]);
                 _cardDeck.Remove(_cardDeck[rndmIndex]);
             }
 
-            Console.Write($"{_players[0]}'s Cards: ");
-            for (int i = 0; i < playerOneCards.Count; i++)
+            for (int i = 0; i < 13; i++)
             {
-                Console.Write(playerOneCards[i] + " ");
+                int rndmIndex = rmdm.Next(0, _cardDeck.Count);
+                playerFourCards.Add(_cardDeck[rndmIndex]);
+                _cardDeck.Remove(_cardDeck[rndmIndex]);
             }
+
+            Console.Write($"{_players[0]}'s Cards: ");
+            DisplayCards(playerOneCards);
+           
+            int playerOneTotal = GiveValueToCards(playerOneCards);
+            Console.Write($" Total: {playerOneTotal}");
+            
             Console.WriteLine("");
 
-            Console.Write($"{_players[1]}'s Cards: ");
-            for (int i = 0; i < playerTwoCards.Count; i++)
-            {
-                Console.Write(playerTwoCards[i] + " ");
-            }
+            Console.ResetColor();
 
+            Console.Write($"{_players[1]}'s Cards: ");
+            DisplayCards(playerTwoCards);
+            int playerTwoTotal = GiveValueToCards(playerTwoCards);
+            Console.Write($" Total: {playerTwoTotal}");
+
+            Console.ResetColor();
             Console.WriteLine("");
 
             Console.Write($"{_players[2]}'s Cards: ");
-            for (int i = 0; i < playerThreeCards.Count; i++)
-            {
-                Console.Write(playerThreeCards[i] + " ");
-            }
+            DisplayCards(playerThreeCards);
+            int playerThreeTotal = GiveValueToCards(playerThreeCards);
+            Console.Write($" Total: {playerThreeTotal}");
+
+            Console.ResetColor();
+            Console.WriteLine("");
+
+            Console.Write($"{_players[3]}'s Cards: ");
+            DisplayCards(playerFourCards);
+            Console.ResetColor();
+            int playerFourTotal = GiveValueToCards(playerFourCards);
+            Console.Write($" Total: {playerFourTotal}");
+
+            Console.WriteLine("");
+            int scoreChecker = playerOneTotal + playerTwoTotal + playerThreeTotal + playerFourTotal;
+            Console.WriteLine($"Score Checker: {scoreChecker}");
         }
         void DisplayCards(List<string> _playerCards)
         {
             for (int i = 0; i < _playerCards.Count; i++)
             {
-                if (_playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" ||
-                    _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" ||
-                    _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "" || _playerCards[i] == "")
-                {
 
+                if (_playerCards[i] == "K♥" || _playerCards[i] == "Q♥" || _playerCards[i] == "J♥" || _playerCards[i] == "2♥" || _playerCards[i] == "3♥" || _playerCards[i] == "4♥" || _playerCards[i] == "5♥" || _playerCards[i] == "6♥" || _playerCards[i] == "7♥" || _playerCards[i] == "8♥" ||
+                    _playerCards[i] == "9♥" || _playerCards[i] == "10♥" || _playerCards[i] == "A♥" || _playerCards[i] == "K♦" || _playerCards[i] == "Q♦" || _playerCards[i] == "J♦" || _playerCards[i] == "A♦" || _playerCards[i] == "2♦" || _playerCards[i] == "3♦" || _playerCards[i] == "4♦" ||
+                    _playerCards[i] == "5♦" || _playerCards[i] == "6♦" || _playerCards[i] == "7♦" || _playerCards[i] == "8♦" || _playerCards[i] == "9♦" || _playerCards[i] == "10♦")
+                {
+                    Console.BackgroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write($" {_playerCards[i]} ");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.BackgroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.Write($" {_playerCards[i]} ");
+                    Console.ResetColor();
                 }
             }
+        }
+        int GiveValueToCards(List<string> _playerCards)
+        {
+            int playerTotal = 0;
+            for (int i = 0; i < _playerCards.Count; i++)
+            {
+                if (_playerCards[i] == "K♥" || _playerCards[i] == "Q♥" || _playerCards[i] == "J♥" || _playerCards[i] == "K♦" || _playerCards[i] == "Q♦" 
+                    || _playerCards[i] == "J♦" || _playerCards[i] == "K♠" || _playerCards[i] == "Q♠" || _playerCards[i] == "J♠"
+                    || _playerCards[i] == "K♣" || _playerCards[i] == "Q♣" || _playerCards[i] == "J♣")
+                {
+                    playerTotal = playerTotal + 12;
+                    
+                }
+                else if (_playerCards[i] == "A♥" || _playerCards[i] == "A♦" || _playerCards[i] == "A♠" || _playerCards[i] == "A♣")
+                {
+                    playerTotal = playerTotal + 15;
+   
+                }
+                else if (_playerCards[i] == "2♥" || _playerCards[i] == "2♦" || _playerCards[i] == "2♠" || _playerCards[i] == "2♣")
+                {
+                    playerTotal = playerTotal + 2;
+                    
+                }
+                else if (_playerCards[i] == "3♥" || _playerCards[i] == "3♦" || _playerCards[i] == "3♠" || _playerCards[i] == "3♣")
+                {
+                    playerTotal = playerTotal + 3;
+                    
+                }
+                else if (_playerCards[i] == "4♥" || _playerCards[i] == "4♦" || _playerCards[i] == "4♠" || _playerCards[i] == "4♣")
+                {
+                    playerTotal = playerTotal + 4;
+                    
+                }
+                else if (_playerCards[i] == "5♥" || _playerCards[i] == "5♦" || _playerCards[i] == "5♠" || _playerCards[i] == "5♣")
+                {
+                    playerTotal = playerTotal + 5;
+                }
+                else if (_playerCards[i] == "6♥" || _playerCards[i] == "6♦" || _playerCards[i] == "6♠" || _playerCards[i] == "6♣")
+                {
+                    playerTotal = playerTotal + 6;
+
+                }
+                else if (_playerCards[i] == "7♥" || _playerCards[i] == "7♦" || _playerCards[i] == "7♠" || _playerCards[i] == "7♣")
+                {
+                    playerTotal = playerTotal + 7;
+
+                }
+                else if (_playerCards[i] == "8♥" || _playerCards[i] == "8♦" || _playerCards[i] == "8♠" || _playerCards[i] == "8♣")
+                {
+                    playerTotal = playerTotal + 8;
+
+                }
+                else if (_playerCards[i] == "9♥" || _playerCards[i] == "9♦" || _playerCards[i] == "9♠" || _playerCards[i] == "9♣")
+                {
+                    playerTotal = playerTotal + 9;
+
+                }
+                else if (_playerCards[i] == "10♥" || _playerCards[i] == "10♦" || _playerCards[i] == "10♠" || _playerCards[i] == "10♣")
+                {
+                    playerTotal = playerTotal + 10;
+
+                }
+                
+                
+            }
+
+            return playerTotal;
         }
     }
 }
