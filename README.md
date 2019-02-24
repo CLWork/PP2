@@ -37,3 +37,4 @@
 
 ####CE06
 - 2/24/2019 - Figured out how to change the colors of the console background and foreground. I have written the instructions to the game and set them to display. The user may name all four players. Deck of cards created. Cards are dealt to players as a list and the display with no color alternations is tested. Beginning of a display method to color specific suits of cards began.
+- Cards are colored appropriately. All 4 players get 13 cards. All cards add up to 420 points.
