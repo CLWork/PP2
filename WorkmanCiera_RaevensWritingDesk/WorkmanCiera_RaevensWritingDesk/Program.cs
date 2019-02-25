@@ -22,7 +22,10 @@ namespace WorkmanCiera_RaevensWritingDesk
             instance.connection = new MySqlConnection();
             instance.Connect();
 
-            Console.WriteLine("Welcome to Raeven's Writing Desk!");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("Welcome to Raeven's Writing Desk!\r\n");
+            Console.ResetColor();
+
             Console.WriteLine("Login or Create New Account?");
             string input = Console.ReadLine().ToLower();
             switch(input)
@@ -33,8 +36,8 @@ namespace WorkmanCiera_RaevensWritingDesk
                         if (currentUser != null)
                         {
                             currentUserID = instance.GetUserId(currentUser, currentUserID);
-                            
-                            instance.CreateNoteBook(currentUser);
+                            instance.ViewNB(currentUserID, currentUser);
+                            //instance.CreateNoteBook(currentUser, currentUserID);
                         }
                         else
                         {
@@ -53,7 +56,7 @@ namespace WorkmanCiera_RaevensWritingDesk
                     Console.WriteLine($"Your entry of {input} was invalid. Please try again.");
                     break;
             }
-
+            Utility.PauseBeforeContinuing();
         }
         DataTable QueryToDB(string query)
         {
@@ -178,13 +181,13 @@ namespace WorkmanCiera_RaevensWritingDesk
             
 
         }
-        void CreateNoteBook(string _currentUser)
+        void CreateNoteBook(string _currentUser, int _currentUserID)
         {
             string notebookName = Validation.StringValidation("What is the title of your notebook?");
-            string query = "INSERT INTO notebooks(notebook_user, notebook_name) VALUES @_currentUser, @notebookName";
+            string query = "INSERT INTO notebooks(notebook_user, notebook_name) VALUES (@_currentUserID, @notebookName)";
 
             MySqlCommand cmd = new MySqlCommand(query, connection);
-            cmd.Parameters.AddWithValue("@_currentUser", _currentUser);
+            cmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
             cmd.Parameters.AddWithValue("@notebookName", notebookName);
 
             MySqlDataReader rdr;
@@ -193,9 +196,51 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             Console.WriteLine($"The new notebook {notebookName} has been created!");
         }
-        void ViewNB()
+        void ViewNB(int _currentUserID, string _currentUser)
         {
-            string query = "SELECT notebook_user, notebook_name FROM notebooks JOIN users ON users.user_id = notebook_user.notebooks";
+            List<string> notebookList = new List<string>();
+            string query = "SELECT notebook_user, notebook_name FROM notebooks WHERE notebook_user = @_currentUserID";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+            MySqlDataReader rdr2;
+
+            rdr2 = cmd.ExecuteReader();
+            if (rdr2.HasRows)
+            {
+                while (rdr2.Read())
+                {
+                    string notebooks = rdr2["notebook_name"] as string;
+                    notebookList.Add(notebooks);
+
+                    
+                }
+
+                for (int i = 0; i < notebookList.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {notebookList[i]}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No notebooks to display!");
+                Console.WriteLine("Create a Notebook?");
+                string userChoice = Console.ReadLine().ToLower();
+                switch (userChoice)
+                {
+                    case "y":
+                        {
+                            CreateNoteBook(_currentUser, _currentUserID);
+                            break;
+                        }
+                    case "n":
+                        {
+                            break;
+                        }
+                    default:
+                        break;
+                }
+                rdr2.Close();
+            }
 
             Console.WriteLine("Create New Notebook or View Page? Enter No to do nothing.");
             string input = Console.ReadLine().ToLower();
