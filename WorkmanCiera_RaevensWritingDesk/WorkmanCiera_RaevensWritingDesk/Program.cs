@@ -17,6 +17,7 @@ namespace WorkmanCiera_RaevensWritingDesk
              * Project & Portfolio 2
              * Raeven's Writing Desk Code Files
              */
+            int currentUserID = 0;
             Program instance = new Program();
             instance.connection = new MySqlConnection();
             instance.Connect();
@@ -28,7 +29,17 @@ namespace WorkmanCiera_RaevensWritingDesk
             {
                 case "login":
                     {
-                        instance.LoginUser();
+                        string currentUser = instance.LoginUser();
+                        if (currentUser != null)
+                        {
+                            currentUserID = instance.GetUserId(currentUser, currentUserID);
+                            
+                            instance.CreateNoteBook(currentUser);
+                        }
+                        else
+                        {
+                            instance.LoginUser();
+                        }
                         break;
                     }
                 case "create new account":
@@ -112,14 +123,12 @@ namespace WorkmanCiera_RaevensWritingDesk
         void CreateUser()
         {
             string query = "INSERT INTO users(username, users_password, user_email) VALUES (@username, @password, @email)";
-            Console.Write("What username would you like to use? ");
-            string username = Console.ReadLine();
+            
+            string username = Validation.StringValidation("What username would you like to use? ");
 
-            Console.Write("\r\nWhat is your email? ");
-            string email = Console.ReadLine();
+            string email = Validation.StringValidation("What is your email? ");
 
-            Console.Write("\r\nEnter your desired password: ");
-            string password = Console.ReadLine();
+            string password = Validation.StringValidation("Enter your desired password: ");
 
             MySqlCommand cmd = new MySqlCommand(query, connection);
             cmd.Parameters.AddWithValue("@username", username);
@@ -130,14 +139,18 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             rdr = cmd.ExecuteReader();
             Console.WriteLine("New user added successfully!");
-        }
-        void LoginUser()
-        {
-            Console.Write("Enter your username: ");
-            string username = Console.ReadLine();
 
-            Console.Write("\r\nEnter your password: ");
-            string password = Console.ReadLine();
+            rdr.Close();
+        }
+        string LoginUser()
+        {
+
+            string _currentUser = null;
+
+            string username = Validation.StringValidation("Enter your username: ");
+
+            
+            string password = Validation.StringValidation("\r\nEnter your password: ");
 
             string query = "SELECT username, users_password FROM users WHERE username = @username AND users_password = @password";
             MySqlCommand cmd = new MySqlCommand(query, connection);
@@ -149,12 +162,90 @@ namespace WorkmanCiera_RaevensWritingDesk
             if (rdr.HasRows)
             {
                 Console.WriteLine($"Welcome {username}!");
+                _currentUser = username;
+                rdr.Close();
+
+                return _currentUser;
             }
             else
             {
                 Console.WriteLine("User not found. Please try again.");
+                rdr.Close();
+                
+                return _currentUser;
             }
 
+            
+
+        }
+        void CreateNoteBook(string _currentUser)
+        {
+            string notebookName = Validation.StringValidation("What is the title of your notebook?");
+            string query = "INSERT INTO notebooks(notebook_user, notebook_name) VALUES @_currentUser, @notebookName";
+
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@_currentUser", _currentUser);
+            cmd.Parameters.AddWithValue("@notebookName", notebookName);
+
+            MySqlDataReader rdr;
+
+            rdr = cmd.ExecuteReader();
+
+            Console.WriteLine($"The new notebook {notebookName} has been created!");
+        }
+        void ViewNB()
+        {
+            string query = "SELECT notebook_user, notebook_name FROM notebooks JOIN users ON users.user_id = notebook_user.notebooks";
+
+            Console.WriteLine("Create New Notebook or View Page? Enter No to do nothing.");
+            string input = Console.ReadLine().ToLower();
+            switch (input)
+            {
+                case "create":
+                    {
+                        break;
+                    }
+                case "page":
+                    {
+                        break;
+                    }
+                case "no":
+                    {
+                        break;
+                    }
+            }
+        }
+
+        void ViewPage()
+        {
+
+        }
+
+        int GetUserId(string _currentUser, int _currentUserID)
+        {
+            int userID = 0;
+            string query = ( "SELECT user_id FROM users WHERE username = @_currentUser");
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@_currentUser", _currentUser);
+
+            MySqlDataReader rdr;
+
+            rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                string userIDString = rdr["user_id"].ToString();
+                int.TryParse(userIDString, out userID);
+
+                
+
+                _currentUserID = userID;
+
+              
+            }
+           
+            rdr.Close();
+            return _currentUserID;
         }
     }
 }
