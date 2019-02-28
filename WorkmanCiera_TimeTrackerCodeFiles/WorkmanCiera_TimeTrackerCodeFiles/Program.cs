@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace WorkmanCiera_TimeTrackerCodeFiles
 {
@@ -47,6 +48,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                     case "enter activity":
                     case "enter an activity":
                         {
+                            instance.EnterActivityMenu(currentUserID);
                             break;
                         }
                     case "2":
@@ -160,7 +162,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
 
             if (loginRdr.HasRows)
             {
-                Console.WriteLine($"Hello {firstName}!");
+                Console.WriteLine($"Hello {firstName}!\r\n");
                 _currentUser = firstName;
                 loginRdr.Close();
                 return _currentUser;
@@ -214,9 +216,46 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
         }
 
         //Enter a new activity to the DB
-        void EnterActivity()
+        void EnterActivityMenu(int _currentUserID)
         {
+            Console.WriteLine("~-~-~-~-~-~-~-~-~-~-~-~\r\n Enter Activity Menu \r\n~-~-~-~-~-~-~-~-~-~-~-~\r\n");
+            int categoryID = ChooseCategory();
+            int descriptionID = ChooseDescription();
+            int dateID = ChooseDate();
+            int monthDayID = MonthDay(dateID);
+            int dayOfWeek = DayOfWeek(monthDayID);
+            int timeSpentID = TimeSpent();
+            while (timeSpentID == 0)
+            {
+                Console.WriteLine("Invalid time entry. Please try again.");
+                timeSpentID = TimeSpent();
+            }
 
+            EnterActivityToDB(_currentUserID, monthDayID, dateID, categoryID, descriptionID, dayOfWeek, timeSpentID);
+
+            Console.WriteLine("\r\n1.Enter Another Activity\r\n2.Return To Menu");
+            string input = Console.ReadLine().ToLower();
+            switch (input)
+            {
+                case "1":
+                case "enter another activity":
+                case "enter":
+                    {
+                        EnterActivityMenu(_currentUserID);
+                        break;
+                    }
+                case "2":
+                case "return":
+                case "menu":
+                case "return to menu":
+                    {
+                        break;
+                    }
+                default:
+                    Console.WriteLine($"Your entry of {input} was invalid. Please try again.");
+                    break;
+            }
+            
         }
 
         //View data
@@ -534,5 +573,727 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             object numEntries = numEntriesCmd.ExecuteScalar();
             Console.WriteLine($"Total Entries to App: {numEntries.ToString()}\r\n");
         }
+
+        //Has the user choose a category and returns the database id of that category.
+        int ChooseCategory()
+        {
+            List<string> categoryList = new List<string>();
+
+            string chooseCatQuery = "SELECT category_description FROM activity_categories";
+            MySqlCommand chooseCatCmd = new MySqlCommand(chooseCatQuery, connection);
+
+            MySqlDataReader chooseCatRdr;
+
+            chooseCatRdr = chooseCatCmd.ExecuteReader();
+
+            while (chooseCatRdr.Read())
+            {
+                string category = chooseCatRdr["category_description"] as string;
+                categoryList.Add(category);
+            }
+
+            chooseCatRdr.Close();
+
+            for (int i = 0; i < categoryList.Count; i++)
+            {
+                Console.WriteLine($"{i}. {categoryList[i]}");
+            }
+            int categoryIndex = Validation.IntValidation("Enter your Selection: ");
+            
+            while (categoryIndex > categoryList.Count - 1)
+            {
+                Console.WriteLine("That selection was out of bounds, please try again.");
+                categoryIndex = Validation.IntValidation("Enter your Selection: ");
+            }
+
+            int _categoryID = categoryIndex + 1;
+
+            chooseCatRdr.Close();
+
+            return _categoryID;
+        }
+
+        //has the user choose a description and returns the id of that chosen description.
+        int ChooseDescription()
+        {
+            List<string> descriptionList = new List<string>();
+            string chooseDescQuery = "SELECT activity_description FROM activity_descriptions";
+            MySqlCommand chooseCatCmd = new MySqlCommand(chooseDescQuery, connection);
+
+            MySqlDataReader chooseDescRdr;
+
+            chooseDescRdr = chooseCatCmd.ExecuteReader();
+
+            while (chooseDescRdr.Read())
+            {
+                string description = chooseDescRdr["activity_description"] as string;
+                descriptionList.Add(description);
+            }
+
+            chooseDescRdr.Close();
+
+            for (int i = 0; i < descriptionList.Count; i++)
+            {
+                Console.WriteLine($"{i}. {descriptionList[i]}");
+            }
+            int descIndex = Validation.IntValidation("Enter your Selection: ");
+
+            while (descIndex > descriptionList.Count - 1)
+            {
+                Console.WriteLine("That selection was out of bounds, please try again.");
+                descIndex = Validation.IntValidation("Enter your Selection: ");
+            }
+
+            int descriptionID = descIndex + 1;
+
+            chooseDescRdr.Close();
+
+            return descriptionID;
+        }
+
+        //has the user choose a date the activity was performed.
+        int ChooseDate()
+        {
+            List<string> dateStringList = new List<string>();
+            List<DateTime> dateList = new List<DateTime>();
+            DateTime convertedDate;
+
+            string chooseDateQuery = "SELECT calendar_date FROM tracked_calendar_dates";
+            MySqlCommand chooseDateCmd = new MySqlCommand(chooseDateQuery, connection);
+
+            MySqlDataReader chooseDateRdr;
+
+            chooseDateRdr = chooseDateCmd.ExecuteReader();
+
+            while (chooseDateRdr.Read())
+            {
+                string date = chooseDateRdr["calendar_date"] as string;
+                Console.WriteLine(date.ToString());
+                dateStringList.Add(date);
+            }
+
+            chooseDateRdr.Close();
+
+            for (int i = 0; i < dateStringList.Count; i++)
+            {
+                //string dateToConvert = null;
+
+                //DateTime parsedDate = DateTime.ParseExact(dateToConvert,
+                //                          "yyyy-MM-dd",
+                //                          CultureInfo.InvariantCulture);
+                //dateList.Add(parsedDate);
+                //Console.WriteLine(parsedDate);
+
+            }
+
+            for (int i = 0; i < dateList.Count; i++)
+            {
+                Console.WriteLine($"{i}. {dateList[i]}");
+            }
+            int dateIndex = Validation.IntValidation("Enter your Selection: ");
+
+            while (dateIndex > dateStringList.Count - 1)
+            {
+                Console.WriteLine("That selection was out of bounds, please try again.");
+                dateIndex = Validation.IntValidation("Enter your Selection: ");
+            }
+
+            int _dateID = dateIndex + 1;
+            
+
+            chooseDateRdr.Close();
+            return _dateID;
+        }
+
+        //the program chooses which numerical day based off of the chosen date.
+        int MonthDay(int _dateID)
+        {
+            int _monthDayID = 0;
+            string monthDayQuery = "SELECT calendar_numerical_day FROM tracked_calendar_days WHERE calendar_day_id = @_dateID";
+
+            MySqlCommand monthDayCmd = new MySqlCommand(monthDayQuery, connection);
+            monthDayCmd.Parameters.AddWithValue("@_dateID", _dateID);
+
+            MySqlDataReader monthDayRdr;
+
+            monthDayRdr = monthDayCmd.ExecuteReader();
+
+            while (monthDayRdr.Read())
+            {
+                string monthDay = monthDayRdr["calendar_numerical_day"].ToString();
+                int.TryParse(monthDay, out _monthDayID);
+            }
+
+            monthDayRdr.Close();
+
+            return _monthDayID;
+
+        }
+
+        //Program chooses which day of the week based off the numerical day chosen.
+        int DayOfWeek(int _monthDayID)
+        {
+            int dayOfWeek = 0;
+            if (_monthDayID == 1 || _monthDayID == 8 || _monthDayID == 15 || _monthDayID == 22)
+            {
+                dayOfWeek = 1;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 2 || _monthDayID == 9 || _monthDayID == 16 || _monthDayID == 23)
+            {
+                dayOfWeek = 2;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 3 || _monthDayID == 10 || _monthDayID == 17 || _monthDayID == 24)
+            {
+                dayOfWeek = 3;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 4 || _monthDayID == 11 || _monthDayID == 18 || _monthDayID == 25)
+            {
+                dayOfWeek = 4;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 5 || _monthDayID == 12 || _monthDayID == 19 || _monthDayID == 26)
+            {
+                dayOfWeek = 5;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 6 || _monthDayID == 13 || _monthDayID == 20)
+            {
+                dayOfWeek = 6;
+                return dayOfWeek;
+
+            } else if (_monthDayID == 7 || _monthDayID == 14 || _monthDayID == 21)
+            {
+                dayOfWeek = 7;
+                return dayOfWeek;
+            }
+            else
+            {
+                Console.WriteLine("Not a valid date.");
+                return dayOfWeek;
+            }
+            
+        }
+
+        //User enters how long they did the activity for
+        int TimeSpent()
+        {
+            decimal timeSpent = Validation.DecimalValidation("How long did you do this activity for? (15 min Increment Format 0.00 - Example 15mins = 0.25)");
+            int timeSpentID = 0;
+
+            if (timeSpent == 0.25m)
+            {
+                timeSpentID = 1;
+                return timeSpentID;
+
+            } else if (timeSpent == 0.5m)
+            {
+                timeSpentID = 2;
+                return timeSpentID;
+            }
+            else if (timeSpent == 0.75m)
+            {
+                timeSpentID = 3;
+                return timeSpentID;
+            }
+            else if (timeSpent == 1m)
+            {
+                timeSpentID = 4;
+                return timeSpentID;
+            }
+            else if (timeSpent == 1.25m)
+            {
+                timeSpentID = 5;
+                return timeSpentID;
+            }
+            else if (timeSpent == 1.5m)
+            {
+                timeSpentID = 6;
+                return timeSpentID;
+            }
+            else if (timeSpent == 1.75m)
+            {
+                timeSpentID = 7;
+                return timeSpentID;
+            }
+            else if (timeSpent == 2m)
+            {
+                timeSpentID = 8;
+                return timeSpentID;
+            }
+            else if (timeSpent == 2.25m)
+            {
+                timeSpentID = 9;
+                return timeSpentID;
+            }
+            else if (timeSpent == 2.5m)
+            {
+                timeSpentID = 10;
+                return timeSpentID;
+            }
+            else if (timeSpent == 2.75m)
+            {
+                timeSpentID = 11;
+                return timeSpentID;
+            }
+            else if (timeSpent == 3m)
+            {
+                timeSpentID = 12;
+                return timeSpentID;
+            }
+            else if (timeSpent == 3.25m)
+            {
+                timeSpentID = 13;
+                return timeSpentID;
+            }
+            else if (timeSpent == 3.5m)
+            {
+                timeSpentID = 14;
+                return timeSpentID;
+            }
+            else if (timeSpent == 3.75m)
+            {
+                timeSpentID = 15;
+                return timeSpentID;
+            }
+            else if (timeSpent == 4m)
+            {
+                timeSpentID = 16;
+                return timeSpentID;
+            }
+            else if (timeSpent == 4.25m)
+            {
+                timeSpentID = 17;
+                return timeSpentID;
+            }
+            else if (timeSpent == 4.5m)
+            {
+                timeSpentID = 18;
+                return timeSpentID;
+            }
+            else if (timeSpent == 4.75m)
+            {
+                timeSpentID = 19;
+                return timeSpentID;
+            }
+            else if (timeSpent == 5.0m)
+            {
+                timeSpentID = 20;
+                return timeSpentID;
+            }
+            else if (timeSpent == 5.25m)
+            {
+                timeSpentID = 21;
+                return timeSpentID;
+            }
+            else if (timeSpent == 5.5m)
+            {
+                timeSpentID = 22;
+                return timeSpentID;
+            }
+            else if (timeSpent == 5.75m)
+            {
+                timeSpentID = 23;
+                return timeSpentID;
+            }
+            else if (timeSpent == 6m)
+            {
+                timeSpentID = 24;
+                return timeSpentID;
+            }
+            else if (timeSpent == 6.25m)
+            {
+                timeSpentID = 25;
+                return timeSpentID;
+            }
+            else if (timeSpent == 6.5m)
+            {
+                timeSpentID = 26;
+                return timeSpentID;
+            }
+            else if (timeSpent == 6.75m)
+            {
+                timeSpentID = 27;
+                return timeSpentID;
+            }
+            else if (timeSpent == 7m)
+            {
+                timeSpentID = 28;
+                return timeSpentID;
+            }
+            else if (timeSpent == 7.25m)
+            {
+                timeSpentID = 29;
+                return timeSpentID;
+            }
+            else if (timeSpent == 7.5m)
+            {
+                timeSpentID = 30;
+                return timeSpentID;
+            }
+            else if (timeSpent == 7.75m)
+            {
+                timeSpentID = 31;
+                return timeSpentID;
+            }
+            else if (timeSpent == 8m)
+            {
+                timeSpentID = 32;
+                return timeSpentID;
+            }
+            else if (timeSpent == 8.25m)
+            {
+                timeSpentID = 33;
+                return timeSpentID;
+            }
+            else if (timeSpent == 8.5m)
+            {
+                timeSpentID = 34;
+                return timeSpentID;
+            }
+            else if (timeSpent == 8.75m)
+            {
+                timeSpentID = 35;
+                return timeSpentID;
+            }
+            else if (timeSpent == 9m)
+            {
+                timeSpentID = 36;
+                return timeSpentID;
+            }
+            else if (timeSpent == 9.25m)
+            {
+                timeSpentID = 37;
+                return timeSpentID;
+            }
+            else if (timeSpent == 9.5m)
+            {
+                timeSpentID = 38;
+                return timeSpentID;
+            }
+            else if (timeSpent == 9.75m)
+            {
+                timeSpentID = 39;
+                return timeSpentID;
+            }
+            else if (timeSpent == 10m)
+            {
+                timeSpentID = 40;
+                return timeSpentID;
+            }
+            else if (timeSpent == 10.25m)
+            {
+                timeSpentID = 41;
+                return timeSpentID;
+            }
+            else if (timeSpent == 10.5m)
+            {
+                timeSpentID = 42;
+                return timeSpentID;
+            }
+            else if (timeSpent == 10.75m)
+            {
+                timeSpentID = 43;
+                return timeSpentID;
+            }
+            else if (timeSpent == 11m)
+            {
+                timeSpentID = 44;
+                return timeSpentID;
+            }
+            else if (timeSpent == 11.25m)
+            {
+                timeSpentID = 45;
+                return timeSpentID;
+            }
+            else if (timeSpent == 11.5m)
+            {
+                timeSpentID = 46;
+                return timeSpentID;
+            }
+            else if (timeSpent == 11.75m)
+            {
+                timeSpentID = 47;
+                return timeSpentID;
+            }
+            else if (timeSpent == 12m)
+            {
+                timeSpentID = 48;
+                return timeSpentID;
+            }
+            else if (timeSpent == 12.25m)
+            {
+                timeSpentID = 49;
+                return timeSpentID;
+            }
+            else if (timeSpent == 12.5m)
+            {
+                timeSpentID = 50;
+                return timeSpentID;
+            }
+            else if (timeSpent == 12.75m)
+            {
+                timeSpentID = 51;
+                return timeSpentID;
+            }
+            else if (timeSpent == 13m)
+            {
+                timeSpentID = 52;
+                return timeSpentID;
+            }
+            else if (timeSpent == 13.25m)
+            {
+                timeSpentID = 53;
+                return timeSpentID;
+            }
+            else if (timeSpent == 13.5m)
+            {
+                timeSpentID = 54;
+                return timeSpentID;
+            }
+            else if (timeSpent == 13.75m)
+            {
+                timeSpentID = 55;
+                return timeSpentID;
+            }
+            else if (timeSpent == 14m)
+            {
+                timeSpentID = 56;
+                return timeSpentID;
+            }
+            else if (timeSpent == 14.25m)
+            {
+                timeSpentID = 57;
+                return timeSpentID;
+            }
+            else if (timeSpent == 14.5m)
+            {
+                timeSpentID = 58;
+                return timeSpentID;
+            }
+            else if (timeSpent == 14.75m)
+            {
+                timeSpentID = 59;
+                return timeSpentID;
+            }
+            else if (timeSpent == 15.0m)
+            {
+                timeSpentID = 60;
+                return timeSpentID;
+            }
+            else if (timeSpent == 15.25m)
+            {
+                timeSpentID = 61;
+                return timeSpentID;
+            }
+            else if (timeSpent == 15.5m)
+            {
+                timeSpentID = 62;
+                return timeSpentID;
+            }
+            else if (timeSpent == 15.75m)
+            {
+                timeSpentID = 63;
+                return timeSpentID;
+            }
+            else if (timeSpent == 16m)
+            {
+                timeSpentID = 64;
+                return timeSpentID;
+            }
+            else if (timeSpent == 16.25m)
+            {
+                timeSpentID = 65;
+                return timeSpentID;
+            }
+            else if (timeSpent == 16.5m)
+            {
+                timeSpentID = 66;
+                return timeSpentID;
+            }
+            else if (timeSpent == 16.75m)
+            {
+                timeSpentID = 67;
+                return timeSpentID;
+            }
+            else if (timeSpent == 17m)
+            {
+                timeSpentID = 68;
+                return timeSpentID;
+            }
+            else if (timeSpent == 17.25m)
+            {
+                timeSpentID = 69;
+                return timeSpentID;
+            }
+            else if (timeSpent == 17.5m)
+            {
+                timeSpentID = 70;
+                return timeSpentID;
+            }
+            else if (timeSpent == 17.75m)
+            {
+                timeSpentID = 71;
+                return timeSpentID;
+            }
+            else if (timeSpent == 18m)
+            {
+                timeSpentID = 72;
+                return timeSpentID;
+            }
+            else if (timeSpent == 18.25m)
+            {
+                timeSpentID = 73;
+                return timeSpentID;
+            }
+            else if (timeSpent == 18.5m)
+            {
+                timeSpentID = 74;
+                return timeSpentID;
+            }
+            else if (timeSpent == 18.75m)
+            {
+                timeSpentID = 75;
+                return timeSpentID;
+            }
+            else if (timeSpent == 19m)
+            {
+                timeSpentID = 76;
+                return timeSpentID;
+            }
+            else if (timeSpent == 19.25m)
+            {
+                timeSpentID = 77;
+                return timeSpentID;
+            }
+            else if (timeSpent == 19.5m)
+            {
+                timeSpentID = 78;
+                return timeSpentID;
+            }
+            else if (timeSpent == 19.75m)
+            {
+                timeSpentID = 79;
+                return timeSpentID;
+            }
+            else if (timeSpent == 20m)
+            {
+                timeSpentID = 80;
+                return timeSpentID;
+            }
+            else if (timeSpent == 20.25m)
+            {
+                timeSpentID = 81;
+                return timeSpentID;
+            }
+            else if (timeSpent == 20.5m)
+            {
+                timeSpentID = 82;
+                return timeSpentID;
+            }
+            else if (timeSpent == 20.75m)
+            {
+                timeSpentID = 83;
+                return timeSpentID;
+            }
+            else if (timeSpent == 21m)
+            {
+                timeSpentID = 84;
+                return timeSpentID;
+            }
+            else if (timeSpent == 21.25m)
+            {
+                timeSpentID = 85;
+                return timeSpentID;
+            }
+            else if (timeSpent == 21.5m)
+            {
+                timeSpentID = 86;
+                return timeSpentID;
+            }
+            else if (timeSpent == 21.75m)
+            {
+                timeSpentID = 87;
+                return timeSpentID;
+            }
+            else if (timeSpent == 22m)
+            {
+                timeSpentID = 88;
+                return timeSpentID;
+            }
+            else if (timeSpent == 22.25m)
+            {
+                timeSpentID = 89;
+                return timeSpentID;
+            }
+            else if (timeSpent == 22.5m)
+            {
+                timeSpentID = 90;
+                return timeSpentID;
+            }
+            else if (timeSpent == 22.75m)
+            {
+                timeSpentID = 91;
+                return timeSpentID;
+            }
+            else if (timeSpent == 23m)
+            {
+                timeSpentID = 92;
+                return timeSpentID;
+            }
+            else if (timeSpent == 23.25m)
+            {
+                timeSpentID = 93;
+                return timeSpentID;
+            }
+            else if (timeSpent == 23.5m)
+            {
+                timeSpentID = 94;
+                return timeSpentID;
+            }
+            else if (timeSpent == 23.75m)
+            {
+                timeSpentID = 95;
+                return timeSpentID;
+            }
+            else if (timeSpent == 24m)
+            {
+                timeSpentID = 96;
+                return timeSpentID;
+            }
+            else
+            {
+                timeSpentID = 0;
+                Console.WriteLine($"Your entry of {timeSpent} was invalid.");
+                return timeSpentID;
+            }
+        }
+
+        //Pushes new log entry to DB
+        void EnterActivityToDB(int _currentUserID, int _monthDayID, int _dateID, int _categoryID, int _descriptionID, int _dayOfWeek, int _timeSpentID)
+        {
+            string enterActivityQuery = "INSERT INTO activity_log(user_id, calendar_day, calendar_date, day_name, category_description, activity_description, time_spent_on_activity) " +
+                "VALUES (@_currentUserID, @_monthDayID, @_dateID, @_dayOfWeek, @_categoryID, @_descriptionID, @_timeSpentID)";
+
+            MySqlCommand enterCmd = new MySqlCommand(enterActivityQuery, connection);
+            enterCmd.Parameters.AddWithValue("@_currentUserID",_currentUserID );
+            enterCmd.Parameters.AddWithValue("@_monthDayID", _monthDayID);
+            enterCmd.Parameters.AddWithValue("@_dateID", _dateID);
+            enterCmd.Parameters.AddWithValue("@_dayOfWeek", _dayOfWeek);
+            enterCmd.Parameters.AddWithValue("@_categoryID", _categoryID);
+            enterCmd.Parameters.AddWithValue("@_descriptionID", _descriptionID);
+            enterCmd.Parameters.AddWithValue("@_timeSpentID", _timeSpentID);
+
+            MySqlDataReader enterRdr;
+
+            enterRdr = enterCmd.ExecuteReader();
+            enterRdr.Close();
+
+            Console.WriteLine("The new activity has been logged!");
+        }
+
+
     }
 }

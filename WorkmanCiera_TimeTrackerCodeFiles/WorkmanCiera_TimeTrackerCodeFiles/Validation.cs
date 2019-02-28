@@ -29,7 +29,8 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             string numberString = Console.ReadLine();
             while (string.IsNullOrWhiteSpace(numberString) || !int.TryParse(numberString, out numberInput) || numberInput < 0)
             {
-                Console.WriteLine("This field cannot be blank and must be a number 0 or above. Please try again.");
+                Console.WriteLine("This field cannot be blank and must be a number 0 or above. Please try again.\r\n");
+                Console.Write(message);
                 numberString = Console.ReadLine();
             }
             return numberInput;
@@ -64,6 +65,8 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             return numberInput;
 
         }
+
+       
 
 
     }
