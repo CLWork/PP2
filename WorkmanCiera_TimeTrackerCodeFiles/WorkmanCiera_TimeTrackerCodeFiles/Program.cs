@@ -20,10 +20,13 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             instance.connection = new MySqlConnection();
             instance.Connect();
 
+            
+
             Console.WriteLine("\r\nWelcome to the Time Tracker Application!\r\n");
             bool programIsRunning = true;
             string currentUser = null;
             int currentUserID = 0;
+            List<string> _listOfDates = instance.PopulateDateList();
            
 
             currentUser = instance.LoginMenu();
@@ -36,7 +39,6 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
 
             while (programIsRunning)
             {
-                
                
                 instance.DisplayMainMenu();
                 Console.Write("Enter your Selection: ");
@@ -48,7 +50,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                     case "enter activity":
                     case "enter an activity":
                         {
-                            instance.EnterActivityMenu(currentUserID);
+                            instance.EnterActivityMenu(currentUserID, _listOfDates);
                             break;
                         }
                     case "2":
@@ -56,7 +58,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                     case "view data":
                     case "view tracked data":
                         {
-                            instance.ViewData(currentUserID);
+                            instance.ViewData(currentUserID, _listOfDates);
                             break;
                         }
                     case "3":
@@ -216,12 +218,12 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
         }
 
         //Enter a new activity to the DB
-        void EnterActivityMenu(int _currentUserID)
+        void EnterActivityMenu(int _currentUserID, List<string> _listOfDates)
         {
             Console.WriteLine("~-~-~-~-~-~-~-~-~-~-~-~\r\n Enter Activity Menu \r\n~-~-~-~-~-~-~-~-~-~-~-~\r\n");
             int categoryID = ChooseCategory();
             int descriptionID = ChooseDescription();
-            int dateID = ChooseDate();
+            int dateID = ChooseDate(_listOfDates);
             int monthDayID = MonthDay(dateID);
             int dayOfWeek = DayOfWeek(monthDayID);
             int timeSpentID = TimeSpent();
@@ -241,7 +243,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                 case "enter another activity":
                 case "enter":
                     {
-                        EnterActivityMenu(_currentUserID);
+                        EnterActivityMenu(_currentUserID, _listOfDates);
                         break;
                     }
                 case "2":
@@ -259,7 +261,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
         }
 
         //View data
-        void ViewData(int _currentUserID)
+        void ViewData(int _currentUserID, List<string> _listOfDates)
         {
             Console.WriteLine("1. Select By Date\r\n" +
                 "2. Select By Category\r\n" +
@@ -273,6 +275,8 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                 case "select date":
                 case "select by date":
                     {
+                        int chosenDateID = ChooseDate(_listOfDates);
+                        ViewAllDate(chosenDateID, _currentUserID);
                         break;
                     }
                 case "2":
@@ -288,6 +292,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                 case "select description":
                 case "select by description":
                     {
+                        SelectDescription(_currentUserID);
                         break;
                     }
                 case "4":
@@ -316,7 +321,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             {
                 calcRdr.Close();
 
-                Console.WriteLine($"~-~-~-~-~-~-~  \r\nCalculations for User {_currentUser} \r\n~-~-~-~-~-~-~\r\n\r\n");
+                Console.WriteLine($"~-~-~-~-~-~-~~-~-~-~-~-~-~  \r\nCalculations for User {_currentUser} \r\n~-~-~-~-~-~-~~-~-~-~-~-~-~\r\n\r\n");
 
 
                 FindTotalLoggedHours(_currentUserID);
@@ -331,6 +336,8 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
                 RunEatCalc(_currentUserID);
                 RunGetReady(_currentUserID);
                 NumberOfWorkEntries(_currentUserID);
+                NumberOfSchoolEntries(_currentUserID);
+                NumberOfPersonal(_currentUserID);
             }
             else
             {
@@ -379,64 +386,185 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
         //Shows the user the selected category
         void ViewCategory(int _categoryID, int _currentUserID)
         {
-            List<string> dateList = new List<string>();
-            List<string> activityDescList = new List<string>();
-            List<string> timeSpentStringList = new List<string>();
-            List<decimal> timeSpentList = new List<decimal>();
-            decimal timeSpent = 0;
-            decimal totalTime = 0m;
-
-            string viewCatQuery = "SELECT activity_log.user_id, tracked_calendar_dates.calendar_date, activity_log.category_description, activity_descriptions.activity_description, activity_times.time_spent_on_activity FROM activity_log " +
-                "JOIN tracked_calendar_dates ON tracked_calendar_dates.calendar_date_id = activity_log.calendar_date " +
+            double _timeSpent = 0;
+            double _totalTime = 0;
+            string viewCatQuery = "SELECT tracked_calendar_dates.calendar_date, activity_categories.category_description, activity_descriptions.activity_description, activity_times.time_spent_on_activity FROM activity_log JOIN activity_categories ON activity_categories.activity_category_id = activity_log.category_description " +
                 "JOIN activity_descriptions ON activity_descriptions.activity_description_id = activity_log.activity_description " +
                 "JOIN activity_times ON activity_times.activity_time_id = activity_log.time_spent_on_activity " +
-                "WHERE user_id = @_currentUserID AND category_description = @_categoryID";
+                "JOIN tracked_calendar_dates ON tracked_calendar_dates.calendar_date_id = activity_log.calendar_date WHERE activity_log.category_description = @_categoryID AND user_id = @_currentUserID";
 
+            // Prepare SQL Statement
             MySqlCommand viewCatCmd = new MySqlCommand(viewCatQuery, connection);
             viewCatCmd.Parameters.AddWithValue("@_categoryID", _categoryID);
             viewCatCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
 
-            MySqlDataReader catRdr;
-            catRdr = viewCatCmd.ExecuteReader();
-            if (catRdr.HasRows)
+            MySqlDataReader viewCatRdr;
+
+            viewCatRdr = viewCatCmd.ExecuteReader();
+            if (viewCatRdr.HasRows)
             {
-                while (catRdr.Read())
+                Console.WriteLine("Entries for Selected Category: \r\n");
+                while (viewCatRdr.Read())
                 {
+                    string date = viewCatRdr["calendar_date"].ToString();
+                    
+                    string description = viewCatRdr["activity_description"].ToString();
 
-                    string date = catRdr["calendar_date"] as string;
+                    string _timeSpentString = viewCatRdr["time_spent_on_activity"].ToString();
+                    if (!double.TryParse(_timeSpentString, out _timeSpent))
+                    {
+                        Console.WriteLine("Cannot convert to number");
+                    }
 
-                    dateList.Add(date);
-                    string activityDesc = catRdr["activity_description"] as string;
-                    activityDescList.Add(activityDesc);
-                    string timeSpentString = catRdr["time_spent_on_activity"] as string;
-                    timeSpentStringList.Add(timeSpentString);
+
+                    Console.WriteLine($"{date} - {description} - {_timeSpent} hour(s)\r\n");
+                    _totalTime = _totalTime + _timeSpent;
+
 
                 }
+                Console.WriteLine($"Total Time Logged: {_totalTime}");
 
-                for (int i = 0; i < timeSpentStringList.Count; i++)
-                {
-                    decimal.TryParse(timeSpentStringList[i], out timeSpent);
-                    timeSpentList.Add(timeSpent);
-                }
-
-                for (int i = 0; i < timeSpentList.Count; i++)
-                {
-                    totalTime = totalTime + timeSpentList[i];
-                }
-
-                for (int i = 0; i < activityDescList.Count; i++)
-                {
-                    Console.WriteLine($"{dateList[i].ToString()} - {activityDescList[i].ToString()} - {timeSpentStringList[i].ToString()}");
-                }
-
-                Console.WriteLine($"Total Time For This Category: {totalTime} hours.");
             }
             else
             {
-                Console.WriteLine("No activites listed for that category!");
+                Console.WriteLine("No data to display!");
+            }
+            viewCatRdr.Close();
+
+        }
+
+        //User selects description to view by
+        void SelectDescription(int _currentUserID)
+        {
+            List<string> descriptionList = new List<string>();
+            string descQuery = "SELECT activity_description FROM activity_descriptions";
+
+            MySqlCommand descCmd = new MySqlCommand(descQuery, connection);
+
+            MySqlDataReader descRdr = descCmd.ExecuteReader();
+
+            while (descRdr.Read())
+            {
+                string description = descRdr["activity_description"] as string;
+                descriptionList.Add(description);
             }
 
-            catRdr.Close();
+            for (int i = 0; i < descriptionList.Count; i++)
+            {
+                Console.WriteLine($"{i}. {descriptionList[i]}");
+            }
+
+            int descriptionIndex = Validation.IntValidation("Enter the number to the left of the category to select it: ");
+            while (descriptionIndex > descriptionList.Count - 1)
+            {
+                descriptionIndex = Validation.IntValidation("Your selection is out of bounds. Please try again.");
+
+            }
+
+            int descriptionID = descriptionIndex + 1;
+            descRdr.Close();
+
+            Console.WriteLine($"You have chosen {descriptionList[descriptionIndex].ToString()}.");
+            ViewDescription(descriptionID, _currentUserID);
+        }
+
+        //Shows the user everything with the selected description
+        void ViewDescription(int _selectedDescriptionID, int _currentUserID)
+        {
+            double _timeSpent = 0;
+            double _totalTime = 0;
+            string viewDescQuery = "SELECT tracked_calendar_dates.calendar_date, activity_categories.category_description, activity_descriptions.activity_description, activity_times.time_spent_on_activity FROM activity_log JOIN activity_categories ON activity_categories.activity_category_id = activity_log.category_description " +
+                "JOIN activity_descriptions ON activity_descriptions.activity_description_id = activity_log.activity_description " +
+                "JOIN activity_times ON activity_times.activity_time_id = activity_log.time_spent_on_activity " +
+                "JOIN tracked_calendar_dates ON tracked_calendar_dates.calendar_date_id = activity_log.calendar_date WHERE activity_log.activity_description = @_descriptionID AND user_id = @_currentUserID";
+
+            // Prepare SQL Statement
+            MySqlCommand viewDescCmd = new MySqlCommand(viewDescQuery, connection);
+            viewDescCmd.Parameters.AddWithValue("@_descriptionID", _selectedDescriptionID);
+            viewDescCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            MySqlDataReader viewDescRdr;
+
+            viewDescRdr = viewDescCmd.ExecuteReader();
+            if (viewDescRdr.HasRows)
+            {
+                Console.WriteLine("Entries for Selected Description: \r\n");
+                while (viewDescRdr.Read())
+                {
+                    string date = viewDescRdr["calendar_date"].ToString();
+                    string category = viewDescRdr["category_description"].ToString();
+                    string description = viewDescRdr["activity_description"].ToString();
+
+                    string _timeSpentString = viewDescRdr["time_spent_on_activity"].ToString();
+                    if (!double.TryParse(_timeSpentString, out _timeSpent))
+                    {
+                        Console.WriteLine("Cannot convert to number");
+                    }
+
+
+                    Console.WriteLine($"{date} - {category} - {description} - {_timeSpent} hour(s)\r\n");
+                    _totalTime = _totalTime + _timeSpent;
+
+
+                }
+                Console.WriteLine($"Total Time Logged: {_totalTime} hour(s).");
+
+            }
+            else
+            {
+                Console.WriteLine("No data to display!");
+            }
+            viewDescRdr.Close();
+
+        }
+
+        //Shows the user everything with the selected date
+        void ViewAllDate(int _chosenDateID, int _currentUserID)
+        {
+            double _timeSpent = 0;
+            double _totalTime = 0;
+            string descDateQuery = "SELECT activity_categories.category_description, activity_descriptions.activity_description, activity_times.time_spent_on_activity from activity_log JOIN activity_categories ON activity_categories.activity_category_id = activity_log.category_description " +
+                "JOIN activity_descriptions ON activity_descriptions.activity_description_id = activity_log.activity_description " +
+                "JOIN activity_times ON activity_times.activity_time_id = activity_log.time_spent_on_activity WHERE calendar_date = @_dateID AND user_id = @_currentUserID";
+
+            // Prepare SQL Statement
+            MySqlCommand descDateCmd = new MySqlCommand(descDateQuery, connection);
+            descDateCmd.Parameters.AddWithValue("@_dateID", _chosenDateID);
+            descDateCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            MySqlDataReader allDateRdr;
+
+            allDateRdr = descDateCmd.ExecuteReader();
+            if (allDateRdr.HasRows)
+            {
+                Console.WriteLine("Entries for Selected Date: \r\n");
+                while (allDateRdr.Read())
+                {
+                    string category = allDateRdr["category_description"].ToString();
+                    string description = allDateRdr["activity_description"].ToString();
+
+                    string _timeSpentString = allDateRdr["time_spent_on_activity"].ToString();
+                    if (!double.TryParse(_timeSpentString, out _timeSpent))
+                    {
+                        Console.WriteLine("Cannot convert to number");
+                    }
+                    
+
+                    Console.WriteLine($"{category} - {description} - {_timeSpent} hour(s)\r\n");
+                    _totalTime = _totalTime + _timeSpent;
+                    
+
+                }
+                Console.WriteLine($"Total Time Logged: {_totalTime}");
+
+            }
+            else
+            {
+                Console.WriteLine("No data to display!");
+            }
+            allDateRdr.Close();
+
+            
         }
         
         //tells the user how many hours they spent sleeping.
@@ -574,6 +702,30 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             Console.WriteLine($"Total Entries to App: {numEntries.ToString()}\r\n");
         }
 
+        //Tells the user how many entries under school category.
+        void NumberOfSchoolEntries(int _currentUserID)
+        {
+            string numberSchoolEntriesQuery = ("SELECT COUNT(activity_times.time_spent_on_activity) FROM activity_log JOIN activity_times ON activity_times.activity_time_id = activity_log.time_spent_on_activity WHERE category_description = 6 AND user_id = @_currentUserID");
+
+            MySqlCommand numSchoolEntriesCmd = new MySqlCommand(numberSchoolEntriesQuery, connection);
+            numSchoolEntriesCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            object numSchoolEntries = numSchoolEntriesCmd.ExecuteScalar();
+            Console.WriteLine($"Total School Entries to App: {numSchoolEntries.ToString()}\r\n");
+        }
+
+        //Tells the user how many entries under Personal category
+        void NumberOfPersonal(int _currentUserID)
+        {
+            string personalCountQuery = ("SELECT COUNT(activity_times.time_spent_on_activity) FROM activity_log JOIN activity_times ON activity_times.activity_time_id = activity_log.time_spent_on_activity WHERE category_description = 3 AND user_id = @_currentUserID");
+
+            MySqlCommand personalCountCmd = new MySqlCommand(personalCountQuery, connection);
+            personalCountCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            object personalCount = personalCountCmd.ExecuteScalar();
+            Console.WriteLine($"Total Personal Entries: {personalCount.ToString()}\r\n");
+        }
+
         //Has the user choose a category and returns the database id of that category.
         int ChooseCategory()
         {
@@ -652,47 +804,16 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
         }
 
         //has the user choose a date the activity was performed.
-        int ChooseDate()
+        int ChooseDate(List<string> _listOfDates)
         {
-            List<string> dateStringList = new List<string>();
-            List<DateTime> dateList = new List<DateTime>();
-            DateTime convertedDate;
-
-            string chooseDateQuery = "SELECT calendar_date FROM tracked_calendar_dates";
-            MySqlCommand chooseDateCmd = new MySqlCommand(chooseDateQuery, connection);
-
-            MySqlDataReader chooseDateRdr;
-
-            chooseDateRdr = chooseDateCmd.ExecuteReader();
-
-            while (chooseDateRdr.Read())
+         
+            for (int i = 0; i < _listOfDates.Count; i++)
             {
-                string date = chooseDateRdr["calendar_date"] as string;
-                Console.WriteLine(date.ToString());
-                dateStringList.Add(date);
-            }
-
-            chooseDateRdr.Close();
-
-            for (int i = 0; i < dateStringList.Count; i++)
-            {
-                //string dateToConvert = null;
-
-                //DateTime parsedDate = DateTime.ParseExact(dateToConvert,
-                //                          "yyyy-MM-dd",
-                //                          CultureInfo.InvariantCulture);
-                //dateList.Add(parsedDate);
-                //Console.WriteLine(parsedDate);
-
-            }
-
-            for (int i = 0; i < dateList.Count; i++)
-            {
-                Console.WriteLine($"{i}. {dateList[i]}");
+                Console.WriteLine($"{i}. {_listOfDates[i]}");
             }
             int dateIndex = Validation.IntValidation("Enter your Selection: ");
 
-            while (dateIndex > dateStringList.Count - 1)
+            while (dateIndex > _listOfDates.Count - 1)
             {
                 Console.WriteLine("That selection was out of bounds, please try again.");
                 dateIndex = Validation.IntValidation("Enter your Selection: ");
@@ -701,7 +822,7 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             int _dateID = dateIndex + 1;
             
 
-            chooseDateRdr.Close();
+            
             return _dateID;
         }
 
@@ -1292,6 +1413,101 @@ namespace WorkmanCiera_TimeTrackerCodeFiles
             enterRdr.Close();
 
             Console.WriteLine("The new activity has been logged!");
+        }
+
+        //Populates list of dates as strings.
+        List<string> PopulateDateList()
+        {
+            List<string> _listOfDates = new List<string>();
+
+            string stm = "SELECT calendar_date from tracked_calendar_dates";
+
+            // Prepare SQL Statement
+            MySqlCommand cmd = new MySqlCommand(stm, connection);
+
+            MySqlDataReader rdr;
+
+            rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                string _dates = rdr["calendar_date"].ToString();
+                _listOfDates.Add(_dates);
+            }
+            rdr.Close();
+            return _listOfDates;
+        }
+
+        //View dates for selected Category
+        List<string> SeeDatesCat(int _categoryID, int _currentUserID)
+        {
+            List<string> _dateList = new List<string>();
+            string stm = "SELECT tracked_calendar_dates.calendar_date from activity_log JOIN tracked_calendar_dates ON tracked_calendar_dates.calendar_date_id = activity_log.calendar_date WHERE category_description = @_categoryID AND user_id = @_currentUserID";
+
+            // Prepare SQL Statement
+            MySqlCommand cmd = new MySqlCommand(stm, connection);
+            cmd.Parameters.AddWithValue("@_categoryID",_categoryID);
+            cmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            MySqlDataReader dateRdr;
+
+            dateRdr = cmd.ExecuteReader();
+            if (dateRdr.HasRows)
+            {
+                while (dateRdr.Read())
+                {
+                    string date = dateRdr["calendar_date"].ToString();
+                    _dateList.Add(date);
+
+                }
+
+                for (int i = 0; i < _dateList.Count; i++)
+                {
+                    Console.WriteLine($"{i}. {_dateList[i].ToString()}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No data to display!");
+            }
+            dateRdr.Close();
+            return _dateList;
+        }
+
+        //View dates for selected Category
+        List<string> SeeDatesDesc(int _descID, int _currentUserID)
+        {
+            List<string> _dateList = new List<string>();
+            string descDateQuery = "SELECT tracked_calendar_dates.calendar_date from activity_log JOIN tracked_calendar_dates ON tracked_calendar_dates.calendar_date_id = activity_log.calendar_date WHERE activity_description = @_descID AND user_id = @_currentUserID";
+
+            // Prepare SQL Statement
+            MySqlCommand descDateCmd = new MySqlCommand(descDateQuery, connection);
+            descDateCmd.Parameters.AddWithValue("@_descID", _descID);
+            descDateCmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+
+            MySqlDataReader dateRdr;
+
+            dateRdr = descDateCmd.ExecuteReader();
+            if (dateRdr.HasRows)
+            {
+                while (dateRdr.Read())
+                {
+                    string date = dateRdr["calendar_date"].ToString();
+                    _dateList.Add(date);
+
+                }
+
+                for (int i = 0; i < _dateList.Count; i++)
+                {
+                    Console.WriteLine($"{i}. {_dateList[i].ToString()}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No data to display!");
+            }
+            dateRdr.Close();
+            return _dateList;
         }
 
 
