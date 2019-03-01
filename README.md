@@ -1,5 +1,5 @@
 # Project & Portfolio 2
-###Week One Coding Exercises
+###Coding Exercises
 --
 ####CE01 
 - 2/6/19 - The user menu has been created and paired with a Switch Statement within a While loop so the program runs until the user chooses to exit.
