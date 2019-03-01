@@ -1,4 +1,8 @@
 # Project & Portfolio 2
+###Assignments
+--
+- This repo contains all submitted work to the class. 
+
 ###Coding Exercises
 --
 ####CE01 
