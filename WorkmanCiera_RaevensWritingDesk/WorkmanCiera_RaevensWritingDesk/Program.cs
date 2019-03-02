@@ -32,7 +32,7 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             //Prompt user to choose to login or create account.
 
-            Console.WriteLine("Login or Create New Account?");
+            Console.WriteLine("Login, Create New Account, or Quit?");
             string input = Console.ReadLine().ToLower();
             switch (input)
             {
@@ -85,6 +85,11 @@ namespace WorkmanCiera_RaevensWritingDesk
                                 instance.LoginUser();
                             }
                         }
+                        break;
+                    }
+                case "quit":
+                case "exit":
+                    {
                         break;
                     }
                 default:
