@@ -379,9 +379,15 @@ namespace WorkmanCiera_RaevensWritingDesk
                 while (rdr3.Read())
                 {
                     string pages = rdr3["ff_content"] as string;
-                    Console.WriteLine($"\r\n{pages.ToString()}\r\n");
+                    pageList.Add(pages);
+                    //Console.WriteLine($"\r\n{pages.ToString()}\r\n");
                 }
                 rdr3.Close();
+
+                for (int i = 0; i < pageList.Count; i++)
+                {
+                    Console.WriteLine($"{i}. {pageList[i]}\r\n\r\n");
+                }
             }
 
             
