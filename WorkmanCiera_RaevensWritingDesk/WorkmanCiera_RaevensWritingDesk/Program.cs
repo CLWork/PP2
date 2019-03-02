@@ -27,28 +27,32 @@ namespace WorkmanCiera_RaevensWritingDesk
             Console.WriteLine("Welcome to Raeven's Writing Desk!\r\n");
             Console.ResetColor();
 
+            bool programIsRunning = true;
+            string currentUser = null;
+
             //Prompt user to choose to login or create account.
+
             Console.WriteLine("Login or Create New Account?");
             string input = Console.ReadLine().ToLower();
-            switch(input)
+            switch (input)
             {
                 case "login":
                     {
-                        string currentUser = instance.LoginUser();
+                        currentUser = instance.LoginUser();
                         if (currentUser != null)
                         {
                             currentUserID = instance.GetUserId(currentUser, currentUserID);
-                            
-                            //Allows user to view their associate notebooks or create one if one does not exist.
-                            instance.ViewNB(currentUserID, currentUser);
 
+                            
+                                //Allows user to view their associate notebooks or create one if one does not exist.
+                                instance.ViewNB(currentUserID, currentUser, programIsRunning);
                             
                         }
                         else
                         {
                             while (currentUser == null)
                             {
-                                instance.LoginUser();
+                                currentUser = instance.LoginUser();
                             }
                         }
                         break;
@@ -59,9 +63,28 @@ namespace WorkmanCiera_RaevensWritingDesk
                     {
                         //Allows user to be created and then login.
                         instance.CreateUser();
-                       string currentUser = instance.LoginUser();
-                        currentUserID = instance.GetUserId(currentUser, currentUserID);
-                        instance.ViewNB(currentUserID, currentUser);
+                        currentUser = instance.LoginUser();
+                        if (currentUser != null)
+                        {
+                            currentUserID = instance.GetUserId(currentUser, currentUserID);
+
+                            while (programIsRunning)
+                            {
+
+                                //Allows user to view their associate notebooks or create one if one does not exist.
+                                instance.ViewNB(currentUserID, currentUser, programIsRunning);
+                            }
+
+
+
+                        }
+                        else
+                        {
+                            while (currentUser == null)
+                            {
+                                instance.LoginUser();
+                            }
+                        }
                         break;
                     }
                 default:
@@ -69,18 +92,9 @@ namespace WorkmanCiera_RaevensWritingDesk
                     break;
             }
             Utility.PauseBeforeContinuing();
+            
         }
-        DataTable QueryToDB(string query)
-        {
-
-            MySqlDataAdapter adapter = new MySqlDataAdapter(query, connection);
-            DataTable data = new DataTable();
-
-            adapter.SelectCommand.CommandType = CommandType.Text;
-            adapter.Fill(data);
-
-            return data;
-        }
+       
         void BuildConnection()
         {
 
@@ -216,7 +230,7 @@ namespace WorkmanCiera_RaevensWritingDesk
         }
 
         //View all notebooks associated with the current user
-        void ViewNB(int _currentUserID, string _currentUser)
+        void ViewNB(int _currentUserID, string _currentUser, bool _programIsRunning)
         {
             List<string> notebookList = new List<string>();
             
@@ -249,7 +263,7 @@ namespace WorkmanCiera_RaevensWritingDesk
             else
             {
                 Console.WriteLine("No notebooks to display!");
-                Console.WriteLine("Create a Notebook?");
+                Console.WriteLine("Create a Notebook? Yes/No");
                 string userChoice = Console.ReadLine().ToLower();
                 switch (userChoice)
                 {
@@ -279,7 +293,7 @@ namespace WorkmanCiera_RaevensWritingDesk
                 case "1":
                 case "view page":
                     {
-                        ViewPage(_currentUserID, _currentUser, notebookList);
+                        ViewAllPages(_currentUserID, _currentUser, notebookList);
                         break;
                     }
                 case "create new notebook":
@@ -291,21 +305,24 @@ namespace WorkmanCiera_RaevensWritingDesk
                 case "create page":
                 case "3":
                     {
+                        
+                        CreatePage(notebookList, _currentUserID);
                         break;
                     }
                 case "exit":
                 case "4":
                     {
-                        
+                        _programIsRunning = false;
                         break;
                     }
                 default:
                     Console.WriteLine($"Your entry of {input} is invalid. Please try again.");
                     break;
             }
-           
+            rdr2.Close();
         }
 
+        //Gets the Notebook ID
         int GetNoteBookID(int _currentUserID, string _notebookName)
         {
             int _notebookID = 0;
@@ -334,14 +351,16 @@ namespace WorkmanCiera_RaevensWritingDesk
         }
 
         //View pages for selected notebook for current user
-        void ViewPage(int _currentUserID, string _currentUser, List<string> _notebookList)
+        void ViewAllPages(int _currentUserID, string _currentUser, List<string> _notebookList)
         {
             List<string> pageList = new List<string>();
+            List<int> pageIDList = new List<int>();
+            int pageID = 0;
             int notebookChoice = Validation.IntValidation("Which notebook would you like to view? Enter the Number to the Left: ");
             bool notebookExists = _notebookList.Contains(_notebookList[notebookChoice]);
             string chosenNotebook = _notebookList[notebookChoice].ToString();
 
-            Console.WriteLine($"{chosenNotebook}");
+            
 
             int _notebookID = GetNoteBookID(_currentUserID, chosenNotebook);
             
@@ -380,17 +399,293 @@ namespace WorkmanCiera_RaevensWritingDesk
                 {
                     string pages = rdr3["ff_content"] as string;
                     pageList.Add(pages);
-                    //Console.WriteLine($"\r\n{pages.ToString()}\r\n");
+                   
+
+                    string pageIDString = rdr3["page_id"].ToString();
+                    if (!int.TryParse(pageIDString, out pageID))
+                    {
+                        Console.WriteLine("Cannot convert to number.");
+                    }
+                    pageIDList.Add(pageID);
+
                 }
                 rdr3.Close();
-
+                Console.WriteLine($"Number of Pages in Notebook: {pageList.Count}");
                 for (int i = 0; i < pageList.Count; i++)
                 {
                     Console.WriteLine($"{i}. {pageList[i]}\r\n\r\n");
                 }
+
+                Console.WriteLine("Select An Action: \r\n" +
+                    "1. View One Page\r\n" +
+                    "2. Edit Page\r\n" +
+                    "3. Back to Menu");
+                string pageChoice = Console.ReadLine().ToLower();
+                switch (pageChoice)
+                {
+                    case "1":
+                    case "view page":
+                    case "view one page":
+                        {
+                            for (int i = 0; i < pageIDList.Count; i++)
+                            {
+                                Console.WriteLine($"{1}. {pageIDList[i]}");
+                                
+                            }
+                            int pageIDIndex = Validation.IntValidation("Enter the number to the left of the Page Number: ");
+                            while (pageIDIndex > pageIDList.Count - 1)
+                            {
+                                Console.WriteLine("Index out of bounds. Please try again.\r\n");
+                                pageIDIndex = Validation.IntValidation("Enter the number to the left of the Page Number: ");
+                            }
+
+                            int chosenPageID = pageIDList[pageIDIndex];
+
+                            int _contentID = GetContentID(chosenPageID);
+                            UpdatePage(_contentID, chosenPageID);
+                            break;
+                        }
+                    case "2":
+                    case "edit page":
+                        {
+                            for (int i = 0; i < pageIDList.Count; i++)
+                            {
+                                Console.WriteLine($"{1}. {pageIDList[i]}");
+
+                            }
+                            int pageIDIndex = Validation.IntValidation("Enter the number to the left of the Page Number: ");
+                            while (pageIDIndex > pageIDList.Count - 1)
+                            {
+                                Console.WriteLine("Index out of bounds. Please try again.\r\n");
+                                pageIDIndex = Validation.IntValidation("Enter the number to the left of the Page Number: ");
+                            }
+
+                            int chosenPageID = pageIDList[pageIDIndex];
+
+                            int _contentID = GetContentID(chosenPageID);
+                            UpdatePage(_contentID, chosenPageID);
+                            break;
+                        }
+                    case "back":
+                    case "back to menu":
+                    case "menu":
+                        {
+                            break;
+                        }
+                    default:
+                        Console.WriteLine($"Your entry of {pageChoice} was invalid. Please try again.");
+                        break;
+
+                }
             }
 
             
+        }
+
+        //Retrieve the ID of the content.
+        int GetContentID(int _chosenPageID)
+        {
+            int contentID = 0;
+            string getIDQuery = "SELECT page_type, freeform_page.ff_id FROM pages JOIN freeform_page ON freeform_page.ff_id = pages.page_type WHERE page_type = @_chosenPageID";
+            MySqlCommand getIDCmd = new MySqlCommand(getIDQuery, connection);
+            getIDCmd.Parameters.AddWithValue("@_chosenPageID", _chosenPageID);
+
+            MySqlDataReader getIDRdr;
+
+            getIDRdr = getIDCmd.ExecuteReader();
+
+            while (getIDRdr.Read())
+            {
+                string contentIDString = getIDRdr["ff_id"].ToString();
+                if (!int.TryParse(contentIDString, out contentID))
+                {
+                    Console.WriteLine("Cannot convert to number");
+                }
+            }
+
+            getIDRdr.Close();
+            return contentID;
+        }
+
+        //View a single page
+        void ViewOnePage(int _chosenPageID)
+        {
+            string viewOneQuery = "SELECT page_type, freeform_page.ff_content FROM pages JOIN freeform_page ON freeform_page.ff_id = pages.page_type WHERE page_id = @_chosenPageID";
+            MySqlCommand viewOneCmd = new MySqlCommand(viewOneQuery, connection);
+            viewOneCmd.Parameters.AddWithValue("@_chosenPageID", _chosenPageID);
+
+            MySqlDataReader viewOneRdr;
+            viewOneRdr = viewOneCmd.ExecuteReader();
+            
+            while (viewOneRdr.Read())
+            {
+             
+                string _pageContent = viewOneRdr["ff_content"].ToString();
+                Console.WriteLine($"{_pageContent}");
+            }
+
+            viewOneRdr.Close();
+        }
+
+        //Edit a chosen page
+        void UpdatePage(int _contentID, int _chosenPageID)
+        {
+            string pageContent = null;
+            string selectContent = "SELECT page_type, freeform_page.ff_content FROM pages JOIN freeform_page ON freeform_page.ff_id = pages.page_type WHERE page_id = @_chosenPage";
+            MySqlCommand selectContentCmd = new MySqlCommand(selectContent, connection);
+            selectContentCmd.Parameters.AddWithValue("@_chosenPage", _chosenPageID);
+
+            MySqlDataReader contentRdr;
+            contentRdr = selectContentCmd.ExecuteReader();
+            while (contentRdr.Read())
+            {
+                pageContent = contentRdr["ff_content"].ToString();
+            }
+
+            contentRdr.Close();
+
+            Console.WriteLine($"Current Content:\r\n {pageContent}");
+
+            Console.WriteLine("Select Action:\r\n1. Add Content\r\n2. Delete Content\r\n3. Input New Content\r\n4.Back\r\n");
+            string contentAction = Console.ReadLine().ToLower();
+            switch (contentAction)
+            {
+                case "1":
+                case "Add content":
+                    {
+                        string updateAddQuery = "UPDATE freeform_page SET ff_content = @_userContent WHERE ff_id = @_contentID";
+
+                        Console.WriteLine("Enter your Content: \r\n\r\n");
+                        string newContent = Console.ReadLine();
+
+                        pageContent = pageContent + " " + newContent;
+
+                        MySqlCommand updateAddCmd = new MySqlCommand(updateAddQuery, connection);
+                        updateAddCmd.Parameters.AddWithValue("@_userContent", pageContent);
+                        updateAddCmd.Parameters.AddWithValue("@_contentID",_contentID);
+
+                        MySqlDataReader addRdr;
+
+                        addRdr = updateAddCmd.ExecuteReader();
+
+                        Console.WriteLine("Page updated!");
+
+                        addRdr.Close();
+
+                        Console.WriteLine("New Content: \r\n");
+                        ViewOnePage(_chosenPageID);
+                        
+
+                        break;
+                    }
+                case "2":
+                case "delete content":
+                    {
+                        pageContent = null;
+                        string updateDeleteQuery = "UPDATE freeform_page SET ff_content = @_userContent WHERE ff_id = @_contentID";
+                        MySqlCommand updateDeleteCmd = new MySqlCommand(updateDeleteQuery, connection);
+                        updateDeleteCmd.Parameters.AddWithValue("@_userContent", pageContent);
+                        updateDeleteCmd.Parameters.AddWithValue("@_contentID", _contentID);
+
+                        MySqlDataReader deleteRdr;
+
+                        deleteRdr = updateDeleteCmd.ExecuteReader();
+
+                        Console.WriteLine("Page updated!");
+
+                        deleteRdr.Close();
+
+                        Console.WriteLine("New Content: \r\n");
+                        ViewOnePage(_chosenPageID);
+
+                        break;
+                    }
+                case "3":
+                
+                case "new content":
+                case "input new content":
+                    {
+                        pageContent = null;
+                        Console.WriteLine("Enter your Content: \r\n\r\n");
+                        pageContent = Console.ReadLine();
+
+                        string updateNewQuery = "UPDATE freeform_page SET ff_content = @_userContent WHERE ff_id = @_contentID";
+                       
+                        MySqlCommand updateNewCmd = new MySqlCommand(updateNewQuery, connection);
+                        updateNewCmd.Parameters.AddWithValue("@_userContent", pageContent);
+                        updateNewCmd.Parameters.AddWithValue("@_contentID", _contentID);
+
+                        MySqlDataReader newRdr;
+
+                        newRdr = updateNewCmd.ExecuteReader();
+
+                        Console.WriteLine("Page updated!");
+
+                        newRdr.Close();
+
+                        Console.WriteLine("New Content: \r\n");
+                        ViewOnePage(_chosenPageID);
+                        
+                        break;
+                    }
+                default:
+                    Console.WriteLine($"Your entry of {contentAction} was invalid,");
+                    break;
+            }
+            
+            
+        }
+
+        void CreatePage(List<string> _notebookList, int _currentUserID)
+        {
+            int notebookChoice = Validation.IntValidation("Which notebook would you like to add to? Enter the Number to the Left: ");
+            bool notebookExists = _notebookList.Contains(_notebookList[notebookChoice]);
+            string chosenNotebook = _notebookList[notebookChoice].ToString();
+            
+            int _notebookID = GetNoteBookID(_currentUserID, chosenNotebook);
+
+            Console.WriteLine("Enter Content for new Page: ");
+            string _newUserContent = Console.ReadLine();
+
+            string insertContentQuery = "INSERT INTO freeform_page(ff_content) VALUES (@_newUserContent)";
+            MySqlCommand insertContentCmd = new MySqlCommand(insertContentQuery, connection);
+            insertContentCmd.Parameters.AddWithValue("@_newUserContent", _newUserContent);
+
+            MySqlDataReader insertContentRdr;
+            insertContentRdr = insertContentCmd.ExecuteReader();
+
+            insertContentRdr.Close();
+
+            int dBCount = 0;
+
+            string countDB = "SELECT COUNT(*) FROM freeform_page;";
+            MySqlCommand countDBCmd = new MySqlCommand(countDB, connection);
+
+
+            object dBCountObject = countDBCmd.ExecuteScalar();
+            string dBCountString = dBCountObject.ToString();
+            if (!int.TryParse(dBCountString, out dBCount))
+            {
+                Console.WriteLine("Cannot convert to number");
+            }
+            countDBCmd.Dispose();
+           
+            int newPageID = dBCount;
+            Console.WriteLine($"{newPageID.ToString()}");
+            
+            string insertToPages = "INSERT INTO pages(pages.notebook_id, pages.page_type) VALUES (@_notebookID, @newPageID)";
+            MySqlCommand insertToPagesCmd = new MySqlCommand(insertToPages, connection);
+            insertToPagesCmd.Parameters.AddWithValue("@_notebookID", _notebookID);
+            insertToPagesCmd.Parameters.AddWithValue("@newPageID", newPageID);
+
+            MySqlDataReader intoPagesRdr;
+
+            intoPagesRdr = insertToPagesCmd.ExecuteReader();
+
+            Console.WriteLine("Page added!");
+
+            intoPagesRdr.Close();
+
         }
 
         //Get user ID
