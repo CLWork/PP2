@@ -234,6 +234,8 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             rdr = cmd.ExecuteReader();
 
+            rdr.Close();
+
             Console.WriteLine($"The new notebook {notebookName} has been created!");
         }
 
