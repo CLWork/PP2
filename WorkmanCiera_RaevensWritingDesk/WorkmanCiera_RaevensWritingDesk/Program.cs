@@ -31,72 +31,75 @@ namespace WorkmanCiera_RaevensWritingDesk
             string currentUser = null;
 
             //Prompt user to choose to login or create account.
-
-            Console.WriteLine("Login, Create New Account, or Quit?");
-            string input = Console.ReadLine().ToLower();
-            switch (input)
+            while (programIsRunning)
             {
-                case "login":
-                    {
-                        currentUser = instance.LoginUser();
-                        if (currentUser != null)
+                Console.WriteLine("Login, Create New Account, or Quit?");
+                string input = Console.ReadLine().ToLower();
+                switch (input)
+                {
+                    case "login":
                         {
-                            currentUserID = instance.GetUserId(currentUser, currentUserID);
-
-                            
-                                //Allows user to view their associate notebooks or create one if one does not exist.
-                                instance.ViewNB(currentUserID, currentUser, programIsRunning);
-                            
-                        }
-                        else
-                        {
-                            while (currentUser == null)
+                            currentUser = instance.LoginUser();
+                            if (currentUser != null)
                             {
-                                currentUser = instance.LoginUser();
-                            }
-                        }
-                        break;
-                    }
-                case "create new account":
-                case "create account":
-                case "create":
-                    {
-                        //Allows user to be created and then login.
-                        instance.CreateUser();
-                        currentUser = instance.LoginUser();
-                        if (currentUser != null)
-                        {
-                            currentUserID = instance.GetUserId(currentUser, currentUserID);
+                                currentUserID = instance.GetUserId(currentUser, currentUserID);
 
-                            while (programIsRunning)
-                            {
 
                                 //Allows user to view their associate notebooks or create one if one does not exist.
                                 instance.ViewNB(currentUserID, currentUser, programIsRunning);
+
                             }
-
-
-
-                        }
-                        else
-                        {
-                            while (currentUser == null)
+                            else
                             {
-                                instance.LoginUser();
+                                while (currentUser == null)
+                                {
+                                    currentUser = instance.LoginUser();
+                                }
                             }
+                            break;
                         }
+                    case "create new account":
+                    case "create account":
+                    case "create":
+                        {
+                            //Allows user to be created and then login.
+                            instance.CreateUser();
+                            currentUser = instance.LoginUser();
+                            if (currentUser != null)
+                            {
+                                currentUserID = instance.GetUserId(currentUser, currentUserID);
+
+                                while (programIsRunning)
+                                {
+
+                                    //Allows user to view their associate notebooks or create one if one does not exist.
+                                    instance.ViewNB(currentUserID, currentUser, programIsRunning);
+                                }
+
+
+
+                            }
+                            else
+                            {
+                                while (currentUser == null)
+                                {
+                                    instance.LoginUser();
+                                }
+                            }
+                            break;
+                        }
+                    case "quit":
+                    case "exit":
+                        {
+                            programIsRunning = false;
+                            break;
+                        }
+                    default:
+                        Console.WriteLine($"Your entry of {input} was invalid. Please try again.");
                         break;
-                    }
-                case "quit":
-                case "exit":
-                    {
-                        break;
-                    }
-                default:
-                    Console.WriteLine($"Your entry of {input} was invalid. Please try again.");
-                    break;
+                }
+                Utility.PauseBeforeContinuing();
             }
-            Utility.PauseBeforeContinuing();
             
         }
        
