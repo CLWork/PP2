@@ -22,10 +22,12 @@ namespace WorkmanCiera_RaevensWritingDesk
             instance.connection = new MySqlConnection();
             instance.Connect();
 
+            //Change greeting color message.
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("Welcome to Raeven's Writing Desk!\r\n");
             Console.ResetColor();
 
+            //Prompt user to choose to login or create account.
             Console.WriteLine("Login or Create New Account?");
             string input = Console.ReadLine().ToLower();
             switch(input)
@@ -36,12 +38,18 @@ namespace WorkmanCiera_RaevensWritingDesk
                         if (currentUser != null)
                         {
                             currentUserID = instance.GetUserId(currentUser, currentUserID);
+                            
+                            //Allows user to view their associate notebooks or create one if one does not exist.
                             instance.ViewNB(currentUserID, currentUser);
-                            //instance.CreateNoteBook(currentUser, currentUserID);
+
+                            
                         }
                         else
                         {
-                            instance.LoginUser();
+                            while (currentUser == null)
+                            {
+                                instance.LoginUser();
+                            }
                         }
                         break;
                     }
@@ -49,7 +57,11 @@ namespace WorkmanCiera_RaevensWritingDesk
                 case "create account":
                 case "create":
                     {
+                        //Allows user to be created and then login.
                         instance.CreateUser();
+                       string currentUser = instance.LoginUser();
+                        currentUserID = instance.GetUserId(currentUser, currentUserID);
+                        instance.ViewNB(currentUserID, currentUser);
                         break;
                     }
                 default:
@@ -123,6 +135,8 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             }
         }
+
+        //User creation
         void CreateUser()
         {
             string query = "INSERT INTO users(username, users_password, user_email) VALUES (@username, @password, @email)";
@@ -145,6 +159,8 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             rdr.Close();
         }
+
+        //Login validation
         string LoginUser()
         {
 
@@ -181,6 +197,8 @@ namespace WorkmanCiera_RaevensWritingDesk
             
 
         }
+
+        //Create a new notebook
         void CreateNoteBook(string _currentUser, int _currentUserID)
         {
             string notebookName = Validation.StringValidation("What is the title of your notebook?");
@@ -196,10 +214,14 @@ namespace WorkmanCiera_RaevensWritingDesk
 
             Console.WriteLine($"The new notebook {notebookName} has been created!");
         }
+
+        //View all notebooks associated with the current user
         void ViewNB(int _currentUserID, string _currentUser)
         {
             List<string> notebookList = new List<string>();
-            string query = "SELECT notebook_user, notebook_name FROM notebooks WHERE notebook_user = @_currentUserID";
+            
+            
+            string query = "SELECT notebook_id, notebook_user, notebook_name FROM notebooks WHERE notebook_user = @_currentUserID";
             MySqlCommand cmd = new MySqlCommand(query, connection);
             cmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
             MySqlDataReader rdr2;
@@ -209,16 +231,20 @@ namespace WorkmanCiera_RaevensWritingDesk
             {
                 while (rdr2.Read())
                 {
+                   
+
                     string notebooks = rdr2["notebook_name"] as string;
                     notebookList.Add(notebooks);
 
                     
                 }
 
+                Console.WriteLine("Your Notebooks: ");
                 for (int i = 0; i < notebookList.Count; i++)
                 {
-                    Console.WriteLine($"{i + 1}. {notebookList[i]}");
+                    Console.WriteLine($"{i}. {notebookList[i]}");
                 }
+                rdr2.Close();
             }
             else
             {
@@ -228,44 +254,140 @@ namespace WorkmanCiera_RaevensWritingDesk
                 switch (userChoice)
                 {
                     case "y":
+                    case "yes":
                         {
                             CreateNoteBook(_currentUser, _currentUserID);
                             break;
                         }
                     case "n":
+                    case "no":
                         {
                             break;
                         }
                     default:
+                        Console.WriteLine($"Your entry of: {userChoice} was invalid. Please try again.");
                         break;
                 }
                 rdr2.Close();
             }
 
-            Console.WriteLine("Create New Notebook or View Page? Enter No to do nothing.");
+            Console.WriteLine("Select an Action: ");
+            Console.WriteLine("\r\n1. View Pages\r\n2. Create New Notebook\r\n3. Create Page\r\n4. Exit");
             string input = Console.ReadLine().ToLower();
             switch (input)
             {
-                case "create":
+                case "1":
+                case "view page":
+                    {
+                        ViewPage(_currentUserID, _currentUser, notebookList);
+                        break;
+                    }
+                case "create new notebook":
+                case "2":
+                    {
+                        CreateNoteBook(_currentUser, _currentUserID);
+                        break;
+                    }
+                case "create page":
+                case "3":
                     {
                         break;
                     }
-                case "page":
+                case "exit":
+                case "4":
                     {
+                        
                         break;
                     }
-                case "no":
-                    {
-                        break;
-                    }
+                default:
+                    Console.WriteLine($"Your entry of {input} is invalid. Please try again.");
+                    break;
             }
+           
         }
 
-        void ViewPage()
+        int GetNoteBookID(int _currentUserID, string _notebookName)
         {
+            int _notebookID = 0;
+            string query = ("SELECT notebook_id FROM notebooks WHERE notebook_user = @_currentUserID AND notebook_name = @_notebookName");
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@_currentUserID", _currentUserID);
+            cmd.Parameters.AddWithValue("@_notebookName", _notebookName);
 
+            MySqlDataReader rdr;
+
+            rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                string notebookIDString = rdr["notebook_id"].ToString();
+                
+                if(!int.TryParse(notebookIDString, out _notebookID))
+                {
+                    Console.WriteLine("Cannot convert to number.");
+                }
+
+            }
+            Console.WriteLine($"{_notebookID}");
+            rdr.Close();
+            return _notebookID;
         }
 
+        //View pages for selected notebook for current user
+        void ViewPage(int _currentUserID, string _currentUser, List<string> _notebookList)
+        {
+            List<string> pageList = new List<string>();
+            int notebookChoice = Validation.IntValidation("Which notebook would you like to view? Enter the Number to the Left: ");
+            bool notebookExists = _notebookList.Contains(_notebookList[notebookChoice]);
+            string chosenNotebook = _notebookList[notebookChoice].ToString();
+
+            Console.WriteLine($"{chosenNotebook}");
+
+            int _notebookID = GetNoteBookID(_currentUserID, chosenNotebook);
+            
+            
+            if (notebookExists == false)
+            {
+                Console.WriteLine("That notebook does not exist!\r\n Would you like to create one?(Y/N)");
+                string userChoice = Console.ReadLine().ToLower();
+                switch (userChoice)
+                {
+                    case "y":
+                    case "yes":
+                        {
+                            CreateNoteBook(_currentUser, _currentUserID);
+                            break;
+                        }
+                    case "n":
+                    case "no":
+                        {
+                            break;
+                        }
+                    default:
+                        Console.WriteLine($"Your entry of {userChoice} was invalid, please try again.");
+                        break;
+                }
+            }
+            else
+            {
+                string query = "SELECT page_id, notebook_id, freeform_page.ff_content FROM pages JOIN freeform_page ON freeform_page.ff_id = pages.page_type WHERE notebook_id = @notebookID";
+                MySqlCommand cmd2 = new MySqlCommand(query, connection);
+                cmd2.Parameters.AddWithValue("@notebookID", _notebookID);
+
+                MySqlDataReader rdr3;
+                rdr3 = cmd2.ExecuteReader();
+                while (rdr3.Read())
+                {
+                    string pages = rdr3["ff_content"] as string;
+                    Console.WriteLine($"\r\n{pages.ToString()}\r\n");
+                }
+                rdr3.Close();
+            }
+
+            
+        }
+
+        //Get user ID
         int GetUserId(string _currentUser, int _currentUserID)
         {
             int userID = 0;
@@ -292,5 +414,6 @@ namespace WorkmanCiera_RaevensWritingDesk
             rdr.Close();
             return _currentUserID;
         }
+        
     }
 }
